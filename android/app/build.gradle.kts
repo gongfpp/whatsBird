@@ -93,7 +93,12 @@ android {
 
     packaging {
         resources {
-            excludes += setOf(
+            // Keep the third-party licence text in the APK. These used to be `excludes`, which
+            // stripped every dependency's LICENSE/NOTICE out of the binary; Apache-2.0 section 4
+            // (and GPL-3.0 section 5, if that is ever chosen instead) requires those notices to
+            // travel with the distribution. Several dependencies ship a file at the same path, so
+            // they are concatenated with `merges` rather than dropped.
+            merges += setOf(
                 "/META-INF/{AL2.0,LGPL2.1}",
                 "/META-INF/DEPENDENCIES",
                 "/META-INF/LICENSE*",
