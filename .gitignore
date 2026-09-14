@@ -46,11 +46,3 @@ __pycache__/
 captures/
 /docs/smoke/
 /docs/diagnosis/
-
-# Keep shareable acceptance summaries and probes, not raw logs or screenshots.
-/docs/acceptance/**/*
-!/docs/acceptance/**/
-!/docs/acceptance/**/*.java
-!/docs/acceptance/**/*.gradle
-!/docs/acceptance/**/summary.json
-!/docs/acceptance/**/verified-metrics.json
