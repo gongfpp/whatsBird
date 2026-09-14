@@ -22,7 +22,7 @@ PY=${PY:-python3}
 # 1. 先探数据量：哪些鸟种照片够、哪些不够
 $PY probe_inat.py
 
-# 2. 抓数据（按观察事件切分 train/val/test，只收 CC0/CC-BY/CC-BY-SA）
+# 2. 抓数据（按观察事件切分 train/val/test，只收 CC0/CC-BY）
 #    background 的份量要跟着目标数据一起涨，否则模型会变得爱猜种名——见「数据翻倍之后」一节
 $PY fetch_inat.py --out data --per-species 150 --background 600
 
@@ -202,6 +202,10 @@ data2: bg 权重 0.510 / 目标 0.999 = 1.96×   ← 背景被相对弱化了 29
 
 ## 许可
 
-默认只使用 `cc0` / `cc-by` / `cc-by-sa` 三种照片许可，它们允许分发衍生模型。
-`--licenses` 可以放开，但发布前需要重新评估。每张图的来源、许可与署名都落在
+默认只使用 `cc0` / `cc-by` 两种照片许可。**`cc-by-sa` 被刻意排除**：CC BY-SA 4.0 只允许
+演绎作品升级到 BY-SA 4.0 或 GPL-3.0 这类兼容许可，不能升到 CC BY /
+Apache-2.0，所以语料里一旦混入 BY-SA 照片，"权重按 CC BY 4.0 发布"就站不住。
+详见 [MODEL_LICENSES.md](../MODEL_LICENSES.md)。
+
+`--licenses` 可以放开，但发布前需要重新评估权重许可。每张图的来源、许可与署名都落在
 `data/manifest.jsonl`，可逐张追溯。

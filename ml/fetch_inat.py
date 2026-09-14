@@ -19,8 +19,9 @@
 Two properties matter more than volume here:
 
 * **Licence hygiene.** Only photos whose licence allows redistributing a derived model are kept
-  (CC0 / CC-BY / CC-BY-SA by default). Every kept photo's licence and attribution is written to the
-  manifest so the provenance of the training set stays auditable.
+  (CC0 / CC-BY by default; CC BY-SA is excluded so the weights can stay under CC BY 4.0 — see
+  MODEL_LICENSES.md and the DEFAULT_LICENSES comment below). Every kept photo's licence and
+  attribution is written to the manifest so the provenance of the training set stays auditable.
 * **Split by observation, not by image.** iNaturalist uploads often contain several near-identical
   frames of the same bird. Splitting per photo would leak the same bird into train and test and
   produce a flattering, meaningless accuracy number, so all photos of one observation land in the
@@ -59,7 +60,13 @@ USER_AGENT = "whatsBird-ml/0.1 (offline bird identifier)"
 PHOTO_SIZES = ("square", "small", "medium", "large", "original")
 DEFAULT_PHOTO_SIZE = "small"
 
-DEFAULT_LICENSES = ("cc0", "cc-by", "cc-by-sa")
+#: CC BY-SA is deliberately **excluded** by default. The model weights are published under
+#: CC BY 4.0 (see MODEL_LICENSES.md), and CC BY-SA 4.0 only allows an adaptation to move to
+#: BY-SA 4.0 or a BY-SA-compatible licence such as GPL-3.0 — never to CC BY or Apache-2.0. So if
+#: the weights were ever held to be an adaptation of the training photos, a corpus containing
+#: BY-SA photos would make the published licence impossible to satisfy. Dropping BY-SA from the
+#: default keeps every future retrain clean; pass --licenses to opt back in deliberately.
+DEFAULT_LICENSES = ("cc0", "cc-by")
 
 #: Photos whose derivative URL could not be rewritten to the requested size are dropped. The count
 #: is reported at the end of the run so an upstream format change is loud instead of silent.
