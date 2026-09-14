@@ -44,5 +44,8 @@ __pycache__/
 *.apk
 *.aab
 captures/
+# Local verification runs (build logs, device metrics, screenshots). Nothing here is needed to
+# build or use the project, and the logs embed absolute paths from the machine that produced them.
 /docs/smoke/
 /docs/diagnosis/
+/docs/acceptance/
