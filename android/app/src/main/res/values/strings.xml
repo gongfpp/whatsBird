@@ -53,4 +53,6 @@
     <string name="set_species_count">当前可识别鸟种</string>
     <string name="set_about">关于</string>
     <string name="set_about_body">识鸟完全在本机离线运行，不联网、不上传照片。它只认识清单内的鸟种；遇到清单外的鸟，可能显示为「鸟类」，也可能被误认成清单内的某个种名。识别结果仅供参考，请以观察为准。</string>
+    <string name="set_license">许可</string>
+    <string name="set_license_body">代码采用 Apache License 2.0，源码位于 github.com/gongfpp/whatsBird。模型权重与训练数据、第三方依赖另有独立许可，其中部分组件并非开源，详见仓库中的 MODEL_LICENSES.md 与 THIRD_PARTY_NOTICES.md。</string>
 </resources>
