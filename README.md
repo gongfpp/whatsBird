@@ -45,11 +45,27 @@ android/app/build/outputs/apk/debug/
 
 模型与训练流程说明见 [ml/README.md](ml/README.md)，随包模型和测试资产来源见 [docs/MODELS.md](docs/MODELS.md)。
 
+## 许可
+
+代码采用 **Apache License 2.0**，见 [LICENSE](LICENSE) 与 [NOTICE](NOTICE)。
+
+代码之外的资产另有不同的许可，使用前请分别确认：
+
+| 资产 | 说明文件 |
+| --- | --- |
+| 模型权重与训练数据 | [MODEL_LICENSES.md](MODEL_LICENSES.md) |
+| 第三方依赖（含 Google Play services 等**专有**库） | [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) |
+| 36 张测试图片（iNaturalist，CC0/CC-BY/CC-BY-SA） | [sample-attributions.json](android/app/src/androidTest/assets/sample-attributions.json) |
+
+> MediaPipe `tasks-core` 会传递引入 Google Play services 相关库，这些是**专有组件**，
+> 不在 Apache-2.0 授权范围内。Apache-2.0 不限制与专有库组合分发，所以这与当前许可不冲突；
+> 但接收方对这些组件不获得任何开源授权，其使用受 Google 的条款约束。
+
 ## 数据与隐私
 
-训练数据、训练中间产物、个人拍摄照片、设备截图、原始日志、APK、签名材料以及本机配置均不提交到仓库。公开的 Android 测试图片来自允许使用的公开来源，并保留逐张来源和许可记录。
+训练数据、训练中间产物、个人拍摄照片、设备截图、原始日志、APK、签名材料以及本机配置均不提交到仓库。公开的 Android 测试图片来自 iNaturalist 的 CC0 / CC-BY / CC-BY-SA 授权照片，逐张来源、作者与许可记录在 `sample-attributions.json`（36/36 覆盖），再分发时须一并保留。仓库内的副本已去除 EXIF。
 
-应用设计目标是让识别在设备本地完成，照片不需要上传到服务端。正式发布前仍应以最终 APK 的合并 Manifest 和实际网络行为为准完成隐私验证。
+应用设计目标是让识别在设备本地完成，照片不需要上传到服务端。应用在 `AndroidManifest.xml` 中以 `tools:node="remove"` 强制剔除 `INTERNET` 与 `ACCESS_NETWORK_STATE` 权限，识别全部在设备本地完成。
 
 ## 测试
 
