@@ -1,7 +1,0 @@
-allprojects { p ->
-  p.afterEvaluate {
-    if (p.path == ':app') {
-      p.android.sourceSets.getByName('test').java.srcDir(new File(initscript.sourceFile.parentFile, 'probes'))
-    }
-  }
-}
