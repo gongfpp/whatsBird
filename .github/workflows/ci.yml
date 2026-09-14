@@ -28,7 +28,12 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      # `packages` has to be stated explicitly. The action's default is `tools platform-tools`,
+      # and Google has retired the `tools` package from the SDK repository, so the default makes
+      # sdkmanager exit 1 and the whole job dies before Gradle even starts.
       - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
 
       - name: Make gradlew executable
         working-directory: android
