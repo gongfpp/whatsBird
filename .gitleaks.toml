@@ -1,0 +1,14 @@
+title = "whatsBird public source checks"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "personal-home-path"
+description = "Do not publish a developer's absolute home-directory path"
+regex = '''(?:/Users/|/home/)[A-Za-z0-9._-]+/'''
+
+[[rules]]
+id = "private-device-ipv4"
+description = "Use a device argument instead of committing a local network address"
+regex = '''\b(?:192\.168\.[0-9]{1,3}\.[0-9]{1,3}|10\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}|172\.(?:1[6-9]|2[0-9]|3[01])\.[0-9]{1,3}\.[0-9]{1,3})\b'''

@@ -1,0 +1,293 @@
+{
+  "description": "Public iNaturalist source-photo credits for the bundled test samples. Sample bytes are unchanged from the source dataset; see each record for its source and license.",
+  "samples": [
+    {
+      "file": "samples/img00.jpg",
+      "photo_id": 170584837,
+      "observation_id": 102086025,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/170584837/small.jpg",
+      "license": "cc-by",
+      "attribution": "(c) Hazel Chang, some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img01.jpg",
+      "photo_id": 396053206,
+      "observation_id": 223515966,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/396053206/small.jpeg",
+      "license": "cc-by",
+      "attribution": "(c) Tim, some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img02.jpg",
+      "photo_id": 315153713,
+      "observation_id": 180878372,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/315153713/small.jpg",
+      "license": "cc-by-sa",
+      "attribution": "(c) Zinogre, some rights reserved (CC BY-SA)"
+    },
+    {
+      "file": "samples/img03.jpg",
+      "photo_id": 182961456,
+      "observation_id": 108643203,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/182961456/small.jpg",
+      "license": "cc-by-sa",
+      "attribution": "(c) Zinogre, some rights reserved (CC BY-SA)"
+    },
+    {
+      "file": "samples/img04.jpg",
+      "photo_id": 359676331,
+      "observation_id": 203561875,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/359676331/small.jpeg",
+      "license": "cc-by",
+      "attribution": "(c) 林正文, some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img05.jpg",
+      "photo_id": 140354852,
+      "observation_id": 85315473,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/140354852/small.jpeg",
+      "license": "cc0",
+      "attribution": "no rights reserved"
+    },
+    {
+      "file": "samples/img06.jpg",
+      "photo_id": 442259436,
+      "observation_id": 247603360,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/442259436/small.jpeg",
+      "license": "cc-by",
+      "attribution": "(c) Hanna U., some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img07.jpg",
+      "photo_id": 453866647,
+      "observation_id": 253475999,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/453866647/small.jpeg",
+      "license": "cc-by",
+      "attribution": "(c) Marco Mussita, some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img08.jpg",
+      "photo_id": 92242288,
+      "observation_id": 57808673,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/92242288/small.jpeg",
+      "license": "cc-by",
+      "attribution": "(c) Trilius Ngian, some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img09.jpg",
+      "photo_id": 474072792,
+      "observation_id": 263848033,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/474072792/small.jpeg",
+      "license": "cc-by",
+      "attribution": "(c) Евгений Маринкин, some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img10.jpg",
+      "photo_id": 217549291,
+      "observation_id": 128095422,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/217549291/small.jpeg",
+      "license": "cc-by",
+      "attribution": "(c) 鐘岳笙, some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img11.jpg",
+      "photo_id": 217549274,
+      "observation_id": 128095422,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/217549274/small.jpeg",
+      "license": "cc-by",
+      "attribution": "(c) 鐘岳笙, some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img12.jpg",
+      "photo_id": 568606836,
+      "observation_id": 314797844,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/568606836/small.jpg",
+      "license": "cc-by",
+      "attribution": "(c) Mitul and Vijul Singh, some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img13.jpg",
+      "photo_id": 594683374,
+      "observation_id": 328204898,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/594683374/small.jpg",
+      "license": "cc-by",
+      "attribution": "(c) Doreen, some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img14.jpg",
+      "photo_id": 466136377,
+      "observation_id": 259647045,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/466136377/small.jpeg",
+      "license": "cc0",
+      "attribution": "no rights reserved"
+    },
+    {
+      "file": "samples/img15.jpg",
+      "photo_id": 470197334,
+      "observation_id": 261693879,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/470197334/small.jpg",
+      "license": "cc0",
+      "attribution": "no rights reserved"
+    },
+    {
+      "file": "samples/img16.jpg",
+      "photo_id": 305033329,
+      "observation_id": 175513775,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/305033329/small.jpeg",
+      "license": "cc0",
+      "attribution": "no rights reserved"
+    },
+    {
+      "file": "samples/img17.jpg",
+      "photo_id": 558991297,
+      "observation_id": 309754509,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/558991297/small.jpg",
+      "license": "cc-by",
+      "attribution": "(c) Navaneeth Sini George, some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img18.jpg",
+      "photo_id": 647946702,
+      "observation_id": 355261492,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/647946702/small.jpg",
+      "license": "cc-by",
+      "attribution": "(c) 胡正恆(Jackson Hu), some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img19.jpg",
+      "photo_id": 281958171,
+      "observation_id": 163042624,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/281958171/small.jpg",
+      "license": "cc-by",
+      "attribution": "(c) Pablo H Capovilla, some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img20.jpg",
+      "photo_id": 30684738,
+      "observation_id": 19896395,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/30684738/small.jpeg",
+      "license": "cc0",
+      "attribution": "no rights reserved"
+    },
+    {
+      "file": "samples/img21.jpg",
+      "photo_id": 339169955,
+      "observation_id": 193110026,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/339169955/small.jpeg",
+      "license": "cc-by",
+      "attribution": "(c) Min-Hsuan NI, some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img22.jpg",
+      "photo_id": 178646547,
+      "observation_id": 106355464,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/178646547/small.jpg",
+      "license": "cc-by",
+      "attribution": "(c) Lawrence Hylton, some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img23.jpg",
+      "photo_id": 647946728,
+      "observation_id": 355261492,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/647946728/small.jpg",
+      "license": "cc-by",
+      "attribution": "(c) 胡正恆(Jackson Hu), some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img24.jpg",
+      "photo_id": 196700371,
+      "observation_id": 116522048,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/196700371/small.jpg",
+      "license": "cc-by",
+      "attribution": "(c) euqirneto, some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img25.jpg",
+      "photo_id": 196700352,
+      "observation_id": 116522048,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/196700352/small.jpg",
+      "license": "cc-by",
+      "attribution": "(c) euqirneto, some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img26.jpg",
+      "photo_id": 498220153,
+      "observation_id": 277476073,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/498220153/small.jpg",
+      "license": "cc-by",
+      "attribution": "(c) Nuno Fialho, some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img27.jpg",
+      "photo_id": 507167096,
+      "observation_id": 282292964,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/507167096/small.jpg",
+      "license": "cc-by",
+      "attribution": "(c) Анна Васильченко, some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img28.jpg",
+      "photo_id": 438317322,
+      "observation_id": 245612350,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/438317322/small.jpeg",
+      "license": "cc-by",
+      "attribution": "(c) Morgan Caygill, some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img29.jpg",
+      "photo_id": 236965053,
+      "observation_id": 138620781,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/236965053/small.jpeg",
+      "license": "cc-by",
+      "attribution": "(c) Claude Kolwelter, some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img30.jpg",
+      "photo_id": 362298987,
+      "observation_id": 204942613,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/362298987/small.jpg",
+      "license": "cc-by",
+      "attribution": "(c) Peter Chen 2.0, some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img31.jpg",
+      "photo_id": 317879376,
+      "observation_id": 182331541,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/317879376/small.jpg",
+      "license": "cc-by-sa",
+      "attribution": "(c) Zinogre, some rights reserved (CC BY-SA)"
+    },
+    {
+      "file": "samples/img32.jpg",
+      "photo_id": 594940529,
+      "observation_id": 328332973,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/594940529/small.jpg",
+      "license": "cc-by",
+      "attribution": "(c) rashidchan, some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img33.jpg",
+      "photo_id": 292195475,
+      "observation_id": 168597642,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/292195475/small.jpg",
+      "license": "cc-by",
+      "attribution": "(c) Andrew Bazdyrev, some rights reserved (CC BY)"
+    },
+    {
+      "file": "samples/img34.jpg",
+      "photo_id": 38993763,
+      "observation_id": 25190966,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/38993763/small.jpg",
+      "license": "cc0",
+      "attribution": "no rights reserved"
+    },
+    {
+      "file": "samples/img35.jpg",
+      "photo_id": 295188938,
+      "observation_id": 170224953,
+      "url": "https://inaturalist-open-data.s3.amazonaws.com/photos/295188938/small.jpg",
+      "license": "cc-by",
+      "attribution": "(c) Utain Pummarin, some rights reserved (CC BY)"
+    }
+  ]
+}

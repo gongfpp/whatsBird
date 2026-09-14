@@ -1,0 +1,8 @@
+allprojects { p ->
+  p.afterEvaluate {
+    if (p.path == ':app') {
+      p.android.sourceSets.getByName('test').java.srcDir(
+        new File(p.rootProject.projectDir, '../docs/acceptance/2026-09-14/probes'))
+    }
+  }
+}

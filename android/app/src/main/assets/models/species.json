@@ -1,0 +1,317 @@
+{
+  "version": "1",
+  "modelVersion": "whatsbird-mobilenetv3small-cn-v2",
+  "inputSize": 224,
+  "inputScale": 1.0,
+  "inputOffset": 0.0,
+  "cropPaddingRatio": 0.15,
+  "backgroundClassIndex": 51,
+  "classes": [
+    {
+      "i": 0,
+      "sci": "Pycnonotus sinensis",
+      "en": "Light-vented Bulbul",
+      "zh": "白头鹎"
+    },
+    {
+      "i": 1,
+      "sci": "Spilopelia chinensis",
+      "en": "Spotted Dove",
+      "zh": "珠颈斑鸠"
+    },
+    {
+      "i": 2,
+      "sci": "Streptopelia orientalis",
+      "en": "Oriental Turtle Dove",
+      "zh": "山斑鸠"
+    },
+    {
+      "i": 3,
+      "sci": "Passer montanus",
+      "en": "Eurasian Tree Sparrow",
+      "zh": "麻雀"
+    },
+    {
+      "i": 4,
+      "sci": "Turdus mandarinus",
+      "en": "Chinese Blackbird",
+      "zh": "乌鸫"
+    },
+    {
+      "i": 5,
+      "sci": "Copsychus saularis",
+      "en": "Oriental Magpie-Robin",
+      "zh": "鹊鸲"
+    },
+    {
+      "i": 6,
+      "sci": "Acridotheres cristatellus",
+      "en": "Crested Myna",
+      "zh": "八哥"
+    },
+    {
+      "i": 7,
+      "sci": "Spodiopsar cineraceus",
+      "en": "White-cheeked Starling",
+      "zh": "灰椋鸟"
+    },
+    {
+      "i": 8,
+      "sci": "Gracupica nigricollis",
+      "en": "Black-collared Starling",
+      "zh": "黑领椋鸟"
+    },
+    {
+      "i": 9,
+      "sci": "Cyanopica cyanus",
+      "en": "Azure-winged Magpie",
+      "zh": "灰喜鹊"
+    },
+    {
+      "i": 10,
+      "sci": "Pica serica",
+      "en": "Oriental Magpie",
+      "zh": "喜鹊"
+    },
+    {
+      "i": 11,
+      "sci": "Urocissa erythroryncha",
+      "en": "Red-billed Blue Magpie",
+      "zh": "红嘴蓝鹊"
+    },
+    {
+      "i": 12,
+      "sci": "Parus minor",
+      "en": "Japanese Tit",
+      "zh": "远东山雀"
+    },
+    {
+      "i": 13,
+      "sci": "Pycnonotus jocosus",
+      "en": "Red-whiskered Bulbul",
+      "zh": "红耳鹎"
+    },
+    {
+      "i": 14,
+      "sci": "Pycnonotus xanthorrhous",
+      "en": "Brown-breasted Bulbul",
+      "zh": "黄臀鹎"
+    },
+    {
+      "i": 15,
+      "sci": "Zosterops japonicus",
+      "en": "Warbling White-eye",
+      "zh": "暗绿绣眼鸟"
+    },
+    {
+      "i": 16,
+      "sci": "Alcedo atthis",
+      "en": "Common Kingfisher",
+      "zh": "普通翠鸟"
+    },
+    {
+      "i": 17,
+      "sci": "Upupa epops",
+      "en": "Eurasian Hoopoe",
+      "zh": "戴胜"
+    },
+    {
+      "i": 18,
+      "sci": "Picus canus",
+      "en": "Grey-headed Woodpecker",
+      "zh": "灰头绿啄木鸟"
+    },
+    {
+      "i": 19,
+      "sci": "Motacilla alba",
+      "en": "White Wagtail",
+      "zh": "白鹡鸰"
+    },
+    {
+      "i": 20,
+      "sci": "Motacilla cinerea",
+      "en": "Grey Wagtail",
+      "zh": "灰鹡鸰"
+    },
+    {
+      "i": 21,
+      "sci": "Hirundo rustica",
+      "en": "Barn Swallow",
+      "zh": "家燕"
+    },
+    {
+      "i": 22,
+      "sci": "Cecropis daurica",
+      "en": "Red-rumped Swallow",
+      "zh": "金腰燕"
+    },
+    {
+      "i": 23,
+      "sci": "Chloris sinica",
+      "en": "Oriental Greenfinch",
+      "zh": "金翅雀"
+    },
+    {
+      "i": 24,
+      "sci": "Aegithalos concinnus",
+      "en": "Black-throated Tit",
+      "zh": "红头长尾山雀"
+    },
+    {
+      "i": 25,
+      "sci": "Garrulax canorus",
+      "en": "Chinese Hwamei",
+      "zh": "画眉"
+    },
+    {
+      "i": 26,
+      "sci": "Pterorhinus sannio",
+      "en": "White-browed Laughingthrush",
+      "zh": "白颊噪鹛"
+    },
+    {
+      "i": 27,
+      "sci": "Sinosuthora webbiana",
+      "en": "Vinous-throated Parrotbill",
+      "zh": "棕头鸦雀"
+    },
+    {
+      "i": 28,
+      "sci": "Oriolus chinensis",
+      "en": "Black-naped Oriole",
+      "zh": "黑枕黄鹂"
+    },
+    {
+      "i": 29,
+      "sci": "Lanius cristatus",
+      "en": "Brown Shrike",
+      "zh": "红尾伯劳"
+    },
+    {
+      "i": 30,
+      "sci": "Lanius schach",
+      "en": "Long-tailed Shrike",
+      "zh": "棕背伯劳"
+    },
+    {
+      "i": 31,
+      "sci": "Dicrurus macrocercus",
+      "en": "Black Drongo",
+      "zh": "黑卷尾"
+    },
+    {
+      "i": 32,
+      "sci": "Corvus macrorhynchos",
+      "en": "Large-billed Crow",
+      "zh": "大嘴乌鸦"
+    },
+    {
+      "i": 33,
+      "sci": "Turdus eunomus",
+      "en": "Dusky Thrush",
+      "zh": "乌灰鸫"
+    },
+    {
+      "i": 34,
+      "sci": "Turdus naumanni",
+      "en": "Naumann's Thrush",
+      "zh": "红尾鸫"
+    },
+    {
+      "i": 35,
+      "sci": "Phoenicurus auroreus",
+      "en": "Daurian Redstart",
+      "zh": "北红尾鸲"
+    },
+    {
+      "i": 36,
+      "sci": "Emberiza cioides",
+      "en": "Meadow Bunting",
+      "zh": "三道眉草鹀"
+    },
+    {
+      "i": 37,
+      "sci": "Lonchura punctulata",
+      "en": "Scaly-breasted Munia",
+      "zh": "斑文鸟"
+    },
+    {
+      "i": 38,
+      "sci": "Columba livia",
+      "en": "Rock Pigeon",
+      "zh": "原鸽"
+    },
+    {
+      "i": 39,
+      "sci": "Ardea cinerea",
+      "en": "Grey Heron",
+      "zh": "苍鹭"
+    },
+    {
+      "i": 40,
+      "sci": "Egretta garzetta",
+      "en": "Little Egret",
+      "zh": "白鹭"
+    },
+    {
+      "i": 41,
+      "sci": "Ardeola bacchus",
+      "en": "Chinese Pond Heron",
+      "zh": "池鹭"
+    },
+    {
+      "i": 42,
+      "sci": "Bubulcus ibis",
+      "en": "Cattle Egret",
+      "zh": "牛背鹭"
+    },
+    {
+      "i": 43,
+      "sci": "Nycticorax nycticorax",
+      "en": "Black-crowned Night Heron",
+      "zh": "夜鹭"
+    },
+    {
+      "i": 44,
+      "sci": "Tachybaptus ruficollis",
+      "en": "Little Grebe",
+      "zh": "小鸊鷉"
+    },
+    {
+      "i": 45,
+      "sci": "Fulica atra",
+      "en": "Eurasian Coot",
+      "zh": "骨顶鸡"
+    },
+    {
+      "i": 46,
+      "sci": "Gallinula chloropus",
+      "en": "Common Moorhen",
+      "zh": "黑水鸡"
+    },
+    {
+      "i": 47,
+      "sci": "Anas platyrhynchos",
+      "en": "Mallard",
+      "zh": "绿头鸭"
+    },
+    {
+      "i": 48,
+      "sci": "Anas zonorhyncha",
+      "en": "Eastern Spot-billed Duck",
+      "zh": "斑嘴鸭"
+    },
+    {
+      "i": 49,
+      "sci": "Chroicocephalus ridibundus",
+      "en": "Black-headed Gull",
+      "zh": "红嘴鸥"
+    },
+    {
+      "i": 50,
+      "sci": "Milvus migrans",
+      "en": "Black Kite",
+      "zh": "黑鸢"
+    }
+  ]
+}

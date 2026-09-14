@@ -1,0 +1,24 @@
+{
+  "raw": {
+    "n": 823,
+    "top1": 0.4835965978128797,
+    "targets": 759,
+    "named": 320,
+    "named_correct": 245,
+    "distractor_n": 34,
+    "distractor_false": 8,
+    "non_bird_n": 30,
+    "non_bird_false": 4
+  },
+  "unique_nonconflicting": {
+    "n": 821,
+    "top1": 0.4835566382460414,
+    "targets": 757,
+    "named": 318,
+    "named_correct": 244,
+    "distractor_n": 34,
+    "distractor_false": 8,
+    "non_bird_n": 30,
+    "non_bird_false": 4
+  }
+}

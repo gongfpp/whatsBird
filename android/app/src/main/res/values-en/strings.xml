@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">whatsBird</string>
+
+    <string name="perm_title">Camera permission needed</string>
+    <string name="perm_body">whatsBird needs the camera to locate and identify birds in the viewfinder. Frames are processed on device and never uploaded.</string>
+    <string name="perm_grant">Allow camera</string>
+    <string name="perm_settings">Open system settings</string>
+    <string name="perm_denied_forever">Permission was permanently denied. Enable the camera under Settings → Apps → whatsBird → Permissions.</string>
+
+    <string name="cam_starting">Starting camera…</string>
+    <string name="cam_error">Camera failed to start</string>
+    <string name="cam_retry">Retry</string>
+
+    <string name="status_scanning">Scanning</string>
+    <string name="status_model_loading">Loading models…</string>
+    <string name="status_detector_only">No identifier model — detection only</string>
+    <string name="status_model_failed">Model failed to load — capture only</string>
+    <string name="status_low_light">Low light, accuracy may drop</string>
+
+    <string name="label_identifying">Identifying</string>
+    <string name="label_unknown_bird">Bird, species unknown</string>
+    <string name="label_too_small">Move closer</string>
+
+    <string name="shutter">Capture</string>
+    <string name="gallery">Gallery</string>
+    <string name="settings">Settings</string>
+    <string name="zoom_reset">1x</string>
+
+    <string name="save_saving">Saving…</string>
+    <string name="save_original_ok">Original saved</string>
+    <string name="save_labeled_ok">Labeled photo saved</string>
+    <string name="save_both_ok">Original and labeled photo saved</string>
+    <string name="save_failed">Save failed</string>
+    <string name="save_no_space">Not enough storage</string>
+    <string name="save_partial">Original saved, labeled copy failed</string>
+    <string name="save_model_unavailable">Model unavailable — original saved</string>
+
+    <string name="set_title">Settings</string>
+    <string name="set_close">Done</string>
+    <string name="set_save_mode">What to save on capture</string>
+    <string name="set_save_original">Original only</string>
+    <string name="set_save_labeled">Labeled only</string>
+    <string name="set_save_both">Original + labeled</string>
+    <string name="set_show_boxes">Show detection boxes</string>
+    <string name="set_use_gpu">Prefer GPU (faster, unstable on some devices)</string>
+    <string name="set_confidence">Display threshold</string>
+    <string name="set_confidence_hint">Higher is more conservative: fewer birds get a name, but fewer wrong names too; lower gives more names but is more likely to mislabel an out-of-list bird as a listed one. Three levels: Conservative / Balanced / More candidates.</string>
+    <string name="set_preset_conservative">Conservative</string>
+    <string name="set_preset_balanced">Balanced</string>
+    <string name="set_preset_more">More candidates</string>
+    <string name="set_advanced">Advanced</string>
+    <string name="set_species_count">Species available</string>
+    <string name="set_about">About</string>
+    <string name="set_about_body">whatsBird runs fully offline on device. It never uploads photos. It only recognises the species it was trained on; birds outside that list may show as “Bird” or occasionally be mislabelled as a listed species — treat results as a hint, not ground truth.</string>
+</resources>

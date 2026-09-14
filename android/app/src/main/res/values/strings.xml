@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">识鸟</string>
+
+    <string name="perm_title">需要相机权限</string>
+    <string name="perm_body">识鸟需要在取景画面中定位并识别鸟类，因此必须使用相机。相机画面仅在本机处理，不会上传。</string>
+    <string name="perm_grant">允许使用相机</string>
+    <string name="perm_settings">去系统设置开启</string>
+    <string name="perm_denied_forever">权限已被永久拒绝，请到「设置 → 应用 → 识鸟 → 权限」中开启相机。</string>
+
+    <string name="cam_starting">正在启动相机…</string>
+    <string name="cam_error">相机启动失败</string>
+    <string name="cam_retry">重试</string>
+
+    <string name="status_scanning">扫描中</string>
+    <string name="status_model_loading">模型加载中…</string>
+    <string name="status_detector_only">未装载鸟类识别模型，仅可检测</string>
+    <string name="status_model_failed">模型加载失败，仅可拍照</string>
+    <string name="status_low_light">光线较暗，识别可能不准</string>
+
+    <string name="label_identifying">识别中</string>
+    <string name="label_unknown_bird">鸟类，暂未确定</string>
+    <string name="label_too_small">靠近一点</string>
+
+    <string name="shutter">拍照</string>
+    <string name="gallery">相册</string>
+    <string name="settings">设置</string>
+    <string name="zoom_reset">1x</string>
+
+    <string name="save_saving">正在保存…</string>
+    <string name="save_original_ok">原图已保存</string>
+    <string name="save_labeled_ok">带标签照片已保存</string>
+    <string name="save_both_ok">原图与带标签照片已保存</string>
+    <string name="save_failed">保存失败</string>
+    <string name="save_no_space">存储空间不足</string>
+    <string name="save_partial">原图已保存，标签图生成失败</string>
+    <string name="save_model_unavailable">模型不可用，已保存原图</string>
+
+    <string name="set_title">设置</string>
+    <string name="set_close">完成</string>
+    <string name="set_save_mode">拍照保存内容</string>
+    <string name="set_save_original">仅原图</string>
+    <string name="set_save_labeled">仅带标签照片</string>
+    <string name="set_save_both">原图 + 带标签照片</string>
+    <string name="set_show_boxes">显示识别框</string>
+    <string name="set_use_gpu">优先使用 GPU（更快，部分机型可能不稳定）</string>
+    <string name="set_confidence">显示门限</string>
+    <string name="set_confidence_hint">数值越高越保守：更少鸟被命名，但误报也更少；越低则更多鸟被命名，但清单外的鸟更容易被误认成已知种名。三档：保守 / 平衡 / 更多候选。</string>
+    <string name="set_preset_conservative">保守</string>
+    <string name="set_preset_balanced">平衡</string>
+    <string name="set_preset_more">更多候选</string>
+    <string name="set_advanced">高级设置</string>
+    <string name="set_species_count">当前可识别鸟种</string>
+    <string name="set_about">关于</string>
+    <string name="set_about_body">识鸟完全在本机离线运行，不联网、不上传照片。它只认识清单内的鸟种；遇到清单外的鸟，可能显示为「鸟类」，也可能被误认成清单内的某个种名。识别结果仅供参考，请以观察为准。</string>
+</resources>

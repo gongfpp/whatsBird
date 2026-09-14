@@ -1,0 +1,191 @@
+{
+  "threshold": 0.55,
+  "samples": [
+    {
+      "file": "samples/img00.jpg",
+      "species": "Pycnonotus sinensis",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img01.jpg",
+      "species": "Pycnonotus sinensis",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img02.jpg",
+      "species": "Pycnonotus sinensis",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img03.jpg",
+      "species": "Pycnonotus sinensis",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img04.jpg",
+      "species": "Pycnonotus sinensis",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img05.jpg",
+      "species": "Pycnonotus sinensis",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img06.jpg",
+      "species": "Passer montanus",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img07.jpg",
+      "species": "Passer montanus",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img08.jpg",
+      "species": "Passer montanus",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img09.jpg",
+      "species": "Passer montanus",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img10.jpg",
+      "species": "Passer montanus",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img11.jpg",
+      "species": "Passer montanus",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img12.jpg",
+      "species": "Spilopelia chinensis",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img13.jpg",
+      "species": "Spilopelia chinensis",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img14.jpg",
+      "species": "Spilopelia chinensis",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img15.jpg",
+      "species": "Spilopelia chinensis",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img16.jpg",
+      "species": "Spilopelia chinensis",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img17.jpg",
+      "species": "Spilopelia chinensis",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img18.jpg",
+      "species": "Acridotheres cristatellus",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img19.jpg",
+      "species": "Acridotheres cristatellus",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img20.jpg",
+      "species": "Acridotheres cristatellus",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img21.jpg",
+      "species": "Acridotheres cristatellus",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img22.jpg",
+      "species": "Acridotheres cristatellus",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img23.jpg",
+      "species": "Acridotheres cristatellus",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img24.jpg",
+      "species": "Cyanopica cyanus",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img25.jpg",
+      "species": "Cyanopica cyanus",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img26.jpg",
+      "species": "Cyanopica cyanus",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img27.jpg",
+      "species": "Cyanopica cyanus",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img28.jpg",
+      "species": "Cyanopica cyanus",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img29.jpg",
+      "species": "Cyanopica cyanus",
+      "kind": "species"
+    },
+    {
+      "file": "samples/img30.jpg",
+      "species": null,
+      "kind": "background",
+      "taxon": "Dendrocitta formosae"
+    },
+    {
+      "file": "samples/img31.jpg",
+      "species": null,
+      "kind": "background",
+      "taxon": "Eophona migratoria"
+    },
+    {
+      "file": "samples/img32.jpg",
+      "species": null,
+      "kind": "background",
+      "taxon": "Turdus hortulorum"
+    },
+    {
+      "file": "samples/img33.jpg",
+      "species": null,
+      "kind": "background",
+      "taxon": "Emberiza elegans"
+    },
+    {
+      "file": "samples/img34.jpg",
+      "species": null,
+      "kind": "background",
+      "taxon": "Fungi"
+    },
+    {
+      "file": "samples/img35.jpg",
+      "species": null,
+      "kind": "background",
+      "taxon": "Muscicapa dauurica"
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+# Local tools, editor state and machine configuration
+.DS_Store
+.idea/
+.vscode/
+.workbuddy/
+.codex/
+.gradle/
+.kotlin/
+build/
+local.properties
+*.iml
+.cxx/
+.externalNativeBuild/
+
+# Credentials and signing material
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+key.properties
+keystore.properties
+credentials.json
+service-account*.json
+
+# Python environments, caches and locally downloaded training data
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+/ml/data*/
+/ml/out*/
+/ml/logs/
+*.keras
+*.h5
+*.ckpt
+
+# Build/install artifacts and private camera captures
+*.apk
+*.aab
+captures/
+/docs/smoke/
+/docs/diagnosis/
+
+# Keep shareable acceptance summaries and probes, not raw logs or screenshots.
+/docs/acceptance/**/*
+!/docs/acceptance/**/
+!/docs/acceptance/**/*.java
+!/docs/acceptance/**/*.gradle
+!/docs/acceptance/**/summary.json
+!/docs/acceptance/**/verified-metrics.json

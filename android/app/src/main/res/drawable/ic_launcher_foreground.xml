@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- tail -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M36,68 L22,79 L28,60 Z" />
+
+    <!-- body -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M52,48 m-20,0 a20,16 0 1,0 40,0 a20,16 0 1,0 -40,0" />
+
+    <!-- wing (slightly recessed tone) -->
+    <path
+        android:fillColor="#BFD8C9"
+        android:pathData="M44,58 C52,62 58,70 55,78 C48,74 43,66 44,58 Z" />
+
+    <!-- head -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M70,46 m-12,0 a12,12 0 1,0 24,0 a12,12 0 1,0 -24,0" />
+
+    <!-- beak -->
+    <path
+        android:fillColor="#F0B429"
+        android:pathData="M79,42 L88,46 L79,50 Z" />
+
+    <!-- eye -->
+    <path
+        android:fillColor="#12301F"
+        android:pathData="M75,42 m-3.2,0 a3.2,3.2 0 1,0 6.4,0 a3.2,3.2 0 1,0 -6.4,0" />
+</vector>
