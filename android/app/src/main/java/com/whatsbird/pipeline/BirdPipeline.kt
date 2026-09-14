@@ -439,10 +439,14 @@ class BirdPipeline(
             // every window to stay readable.
             if (nowMs - lastStatsLogMs >= STATS_LOG_INTERVAL_MS) {
                 lastStatsLogMs = nowMs
+                // NOTE: the whole concatenation must be parenthesised before `.format()`. In Kotlin
+                // `.` binds tighter than `+`, so `"a" + "b".format(x)` formats only "b" — which
+                // silently shifts every argument and feeds a Float to %d, throwing
+                // IllegalFormatConversionException on the frame thread (and killing the process).
                 Log.i(
                     TAG,
-                    "live previewFps=%.1f detectFps=%.1f classifyFps=%.1f detectMs=%.0f " +
-                        "classifyMs=%.0f dropped=%d birds=%d firstStable=%dms".format(
+                    ("live previewFps=%.1f detectFps=%.1f classifyFps=%.1f detectMs=%.0f " +
+                        "classifyMs=%.0f dropped=%d birds=%d firstStable=%dms").format(
                             previewFps,
                             detectionFps,
                             classificationFps,

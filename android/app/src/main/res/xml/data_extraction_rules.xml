@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Backup / device-transfer rules.
+
+  The app keeps crash stack traces and the BootGuard marker in its internal filesDir. Those exist to
+  diagnose field failures; they are not user data and should not follow the user to a new device or
+  into a cloud backup. Everything else — chiefly the DataStore preferences — uses the default
+  behaviour and is included, which is why this file lists exclusions only: an <exclude> that is not
+  covered by an <include> is meaningless, and lint rejects it.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="crashes/" />
+        <!-- BootGuard marker: a single file directly in filesDir, not a directory. -->
+        <exclude domain="file" path="model_boot_guard" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="crashes/" />
+        <exclude domain="file" path="model_boot_guard" />
+    </device-transfer>
+</data-extraction-rules>

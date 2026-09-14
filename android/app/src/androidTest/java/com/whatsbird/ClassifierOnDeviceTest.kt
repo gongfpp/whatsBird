@@ -139,8 +139,12 @@ class ClassifierOnDeviceTest {
         // the model actually measures here. Real accuracy is tracked in docs/MODEL_CARD.md, which has
         // 829 test images behind it instead of thirty.
         assertTrue(
-            "listed-species top-1 accuracy collapsed to %.1f%% ($speciesCorrect/$speciesSeen), " +
-                "which points at a broken export rather than a weak model".format(speciesAccuracy * 100),
+            // Parenthesised: "a" + "b".format(x) formats only "b" in Kotlin, which would leave the
+            // %.1f%% in the first half unformatted and drop the accuracy from the failure message.
+            (
+                "listed-species top-1 accuracy collapsed to %.1f%% ($speciesCorrect/$speciesSeen), " +
+                    "which points at a broken export rather than a weak model"
+                ).format(speciesAccuracy * 100),
             speciesAccuracy >= 0.30f,
         )
         assertTrue(

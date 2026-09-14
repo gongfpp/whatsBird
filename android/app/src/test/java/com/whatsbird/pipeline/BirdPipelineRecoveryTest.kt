@@ -7,6 +7,7 @@ import com.whatsbird.label.LabelStabilizer
 import com.whatsbird.track.BirdTracker
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -107,6 +108,32 @@ class BirdPipelineRecoveryTest {
             val stats = pipeline.stats.value
             assertEquals("zero completed detections should report zero detection FPS", 0f, stats.detectionFps, 0.001f)
             assertEquals("zero classifications should report zero classification FPS", 0f, stats.classificationFps, 0.001f)
+        } finally {
+            pipeline.close()
+        }
+    }
+
+    /**
+     * The rolling stats log line is built with `String.format` on a concatenated literal. Kotlin's
+     * `.` binds tighter than `+`, so an unparenthesised concatenation formats only the second half and
+     * shifts every argument — a Float reaching `%d` throws IllegalFormatConversionException on the
+     * frame thread and kills the process. This test crosses both the 1 s stats window and the 5 s
+     * log-sampling interval so that path is actually executed.
+     */
+    @Test
+    fun `the rolling stats log line formats cleanly after the 5s sampling interval`() {
+        val pipeline = newPipeline(BirdTracker())
+        try {
+            field(pipeline, "statsWindowStart").also { it.isAccessible = true }.setLong(pipeline, 1000L)
+            field(pipeline, "lastStatsLogMs").also { it.isAccessible = true }.setLong(pipeline, 0L)
+            val updateStats = pipeline.javaClass.getDeclaredMethod("updateStats", Long::class.java)
+                .also { it.isAccessible = true }
+
+            val thrown = runCatching { updateStats.invoke(pipeline, 6000L) }.exceptionOrNull()
+            assertNull(
+                "the stats log line must format cleanly; a mis-format here kills the frame thread",
+                thrown?.cause ?: thrown,
+            )
         } finally {
             pipeline.close()
         }

@@ -11,9 +11,27 @@
 
     <uses-permission android:name="android.permission.CAMERA" />
 
+    <!--
+      The final APK must not be able to reach the network. Declaring only CAMERA here is not enough:
+      transitive dependencies contribute more. As merged, `com.google.android.datatransport:
+      transport-backend-cct` (a telemetry upload backend) adds INTERNET and
+      `androidx.profileinstaller` adds ACCESS_NETWORK_STATE. This app performs no network I/O, so both
+      are stripped with the merger — that makes the offline promise enforceable rather than merely
+      intended. Verified against the merged manifest; re-check with
+      `grep INTERNET app/build/intermediates/merged_manifest/**/AndroidManifest.xml` after upgrading
+      dependencies, since a new library can reintroduce them.
+    -->
+    <uses-permission
+        android:name="android.permission.INTERNET"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.ACCESS_NETWORK_STATE"
+        tools:node="remove" />
+
     <application
         android:name=".WhatsBirdApp"
         android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:largeHeap="true"
