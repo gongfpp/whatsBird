@@ -24,6 +24,7 @@ import com.whatsbird.settings.AppSettings
 import com.whatsbird.settings.SaveMode
 import com.whatsbird.util.BootGuard
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -117,6 +118,12 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
     /** Debounce so a detector that keeps throwing does not spin a rebuild loop. */
     private var lastDetectorErrorMs = 0L
 
+    /** Collectors forwarding the current pipeline's streams; cancelled before every rebuild. */
+    private var pipelineCollectors: Job? = null
+
+    /** Incremented per model build; only the newest build installs its models. */
+    private var buildToken = 0
+
     /**
      * Set when the previous launch died before the models came up. GPU bring-up is the only path
      * that can do that, so this process stays on CPU for its whole life — including before the
@@ -156,8 +163,19 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
     private suspend fun buildPipeline(useGpu: Boolean, confidenceThreshold: Float) {
         builtWithGpu = useGpu
         _modelStatus.value = ModelStatus.LOADING
+        // Cancel the previous pipeline's forwarders before closing it: BirdPipeline.close() stops the
+        // detector and the executor but cannot stop the outside world collecting its StateFlows, so
+        // without this every GPU toggle or error rebuild leaves another suspended collector — and
+        // another reference to the old pipeline — behind.
+        pipelineCollectors?.cancel()
+        pipelineCollectors = null
         pipeline?.close()
         pipeline = null
+
+        // Token for *this* build: a detector error rebuild can overlap a user's GPU-preference
+        // rebuild, and model loading is slow enough that the older one can finish last. Whoever lands
+        // second wins; the stale result is discarded rather than overwriting the newer state.
+        val token = ++buildToken
         detector = null
         classifier = null
         capture = null
@@ -192,6 +210,14 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
                 null
             }
             Triple(newDetector, newClassifier, dictionary)
+        }
+
+        if (token != buildToken) {
+            // A newer build started while these models were loading; close ours and let that one win.
+            Log.i(TAG, "discarding superseded model build token=$token current=$buildToken")
+            runCatching { built.first?.close() }
+            runCatching { built.second?.close() }
+            return
         }
 
         installModels(
@@ -241,10 +267,11 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
         _modelStatus.value = newPipeline.status.value
         refreshCaptureHandler()
 
-        viewModelScope.launch { newPipeline.overlay.collect { _overlay.value = it } }
-        viewModelScope.launch { newPipeline.stats.collect { _stats.value = it } }
-        viewModelScope.launch {
-            newPipeline.firstResultSeen.collect { seen -> if (seen) bootGuard.clear() }
+        // One parent job for all three forwarders so a rebuild cancels them in a single step.
+        pipelineCollectors = viewModelScope.launch {
+            launch { newPipeline.overlay.collect { _overlay.value = it } }
+            launch { newPipeline.stats.collect { _stats.value = it } }
+            launch { newPipeline.firstResultSeen.collect { seen -> if (seen) bootGuard.clear() } }
         }
     }
 

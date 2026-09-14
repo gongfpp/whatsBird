@@ -104,10 +104,17 @@ class PhotoCapture(
         settings: AppSettings,
         stages: StageLog,
     ): CaptureOutcome {
-        val labeledRequested = settings.saveMode != SaveMode.ORIGINAL
+        // With no model there is nothing to annotate, so a "_labeled" copy would be a byte-for-byte
+        // duplicate of the original. Skip it, and make sure the original is still kept even in
+        // LABELED-only mode: the user pressed the shutter for a photo, and the model being down must
+        // not cost them that. This is also what keeps "model unavailable" distinguishable from "the
+        // model ran and found no bird" — the latter still produces a labelled copy, with no boxes.
+        val modelsReady = detector != null && pipeline != null
+        val labeledRequested = settings.saveMode != SaveMode.ORIGINAL && modelsReady
+        val saveOriginal = settings.saveMode != SaveMode.LABELED || !modelsReady
 
         // Kicked off first so it overlaps everything below.
-        val pendingOriginal: Future<SaveResult>? = if (settings.saveMode != SaveMode.LABELED) {
+        val pendingOriginal: Future<SaveResult>? = if (saveOriginal) {
             ioExecutor.submit<SaveResult> { saver.saveJpeg(jpegBytes, "$name.jpg") }
         } else {
             null
@@ -187,9 +194,9 @@ class PhotoCapture(
                 identifiedNames = names,
                 birdCount = annotations.size,
                 labeledFailed = labeledFailed || (labeledRequested && labeled == null),
-                // Only meaningful when we could not produce a label because the model was missing,
-                // not when the model ran and simply found nothing.
-                modelUnavailable = modelUnavailable && labeled == null,
+                // With no model we never wrote a labelled copy, so this stays true and the UI can say
+                // "saved original, model unavailable" rather than the ambiguous "no bird found".
+                modelUnavailable = modelUnavailable,
             )
         }
 

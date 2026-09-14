@@ -29,6 +29,38 @@ android {
         }
     }
 
+    /**
+     * Release signing. Never falls back to the debug keystore: a debug-signed "release" cannot be
+     * upgraded in place, cannot be published, and makes the app's identity impossible to verify.
+     *
+     * Provide the keystore locally (never committed) via ~/.gradle/gradle.properties or the
+     * environment:
+     *   WHATSBIRD_KEYSTORE=/abs/path/release.jks   (or a path relative to the project)
+     *   WHATSBIRD_KEYSTORE_PASSWORD=...
+     *   WHATSBIRD_KEY_ALIAS=...
+     *   WHATSBIRD_KEY_PASSWORD=...
+     * Without them the release build fails loudly instead of silently shipping a debug signature.
+     */
+    signingConfigs {
+        create("release") {
+            val keystorePath = (project.findProperty("WHATSBIRD_KEYSTORE")
+                ?: System.getenv("WHATSBIRD_KEYSTORE"))?.toString()
+            val storePassword = (project.findProperty("WHATSBIRD_KEYSTORE_PASSWORD")
+                ?: System.getenv("WHATSBIRD_KEYSTORE_PASSWORD"))?.toString()
+            val keyAlias = (project.findProperty("WHATSBIRD_KEY_ALIAS")
+                ?: System.getenv("WHATSBIRD_KEY_ALIAS"))?.toString()
+            val keyPassword = (project.findProperty("WHATSBIRD_KEY_PASSWORD")
+                ?: System.getenv("WHATSBIRD_KEY_PASSWORD"))?.toString()
+
+            if (keystorePath != null && storePassword != null && keyAlias != null && keyPassword != null) {
+                storeFile = rootProject.file(keystorePath)
+                this.storePassword = storePassword
+                this.keyAlias = keyAlias
+                this.keyPassword = keyPassword
+            }
+        }
+    }
+
     buildTypes {
         debug {
             isMinifyEnabled = false
@@ -41,7 +73,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
@@ -110,6 +142,12 @@ dependencies {
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
 
+    // Do NOT try to slim this down by excluding com.google.android.datatransport. tasks-core touches
+    // TransportRuntime while creating a task, so excluding it fails on device with
+    // `NoClassDefFoundError: Lcom/google/android/datatransport/runtime/TransportRuntime;` and the
+    // pipeline never reaches READY. Offline is enforced in AndroidManifest.xml instead, where we
+    // strip INTERNET / ACCESS_NETWORK_STATE with tools:node="remove" — the telemetry can then only
+    // log a harmless ACCESS_NETWORK_STATE warning and never reach the network.
     implementation(libs.mediapipe.tasks.vision)
     implementation(libs.litert)
 
