@@ -36,14 +36,16 @@ import org.junit.runner.RunWith
  * Runs the *shipped* classifier on the actual phone, over thirty-six held-out iNaturalist photos:
  * thirty of listed species and six that the list does not contain.
  *
- * Why this exists rather than relying on the offline numbers in `MODEL_CARD.md`: the offline
- * evaluation happens in the Python TFLite runtime, which is a different LiteRT build with different
- * delegate behaviour (the int8 graph is rejected by XNNPACK there). Only running the packaged model
- * on the packaged runtime answers "does identification work on the device", and this test answers
- * it without needing somebody to point the camera at a live bird.
+ * Why this exists rather than relying on the offline export report (`out/MODEL_CARD.md`, produced
+ * locally by `ml/export_assets.py`): the offline evaluation happens in the Python TFLite runtime,
+ * which is a different LiteRT build with different delegate behaviour (the int8 graph is rejected
+ * by XNNPACK there). Only running the packaged model on the packaged runtime answers "does
+ * identification work on the device", and this test answers it without needing somebody to point
+ * the camera at a live bird.
  *
- * The samples come from the `test` split of `ml/data`, which the model never saw during training or
- * tuning, so the accuracy asserted here is not training-set recall.
+ * The samples come from a `test` split of `ml/data`. They are a smoke floor, not an accuracy
+ * claim: the historical test sets were contaminated across model versions, so no number from them
+ * is a quality baseline (see docs/MODELS.md).
  */
 @RunWith(AndroidJUnit4::class)
 class ClassifierOnDeviceTest {
@@ -81,7 +83,10 @@ class ClassifierOnDeviceTest {
             val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
             assertNotNull("could not decode ${sample.file}", bitmap)
 
-            val predictions = classifier!!.classify(bitmap!!)
+            val predictions = when (val classified = classifier!!.classify(bitmap!!)) {
+                is com.whatsbird.classify.ClassificationResult.Success -> classified.predictions
+                else -> error("classify() failed or produced no ranking for ${sample.file}: $classified")
+            }
             bitmap.recycle()
             assertTrue("classify() returned no predictions for ${sample.file}", predictions.isNotEmpty())
 
@@ -151,9 +156,9 @@ class ClassifierOnDeviceTest {
 
         // This floor exists to catch a *broken export* — scrambled class order, a mis-quantised graph,
         // a preprocessing mismatch — not to certify an accuracy figure. Those failures land at or
-        // below chance (1/52 ≈ 2%), so 30% is far above any breakage signal and far below the ~47%
-        // the model actually measures here. Real accuracy is tracked in docs/MODEL_CARD.md, which has
-        // 829 test images behind it instead of thirty.
+        // below chance (1/52 ≈ 2%), so 30% is far above any breakage signal. The historical accuracy
+        // figures quoted for this model are contaminated across model versions and must not be used
+        // as a baseline; docs/MODELS.md says the same.
         assertTrue(
             // Parenthesised: "a" + "b".format(x) formats only "b" in Kotlin, which would leave the
             // %.1f%% in the first half unformatted and drop the accuracy from the failure message.
@@ -187,7 +192,10 @@ class ClassifierOnDeviceTest {
                 val bitmap = instrumentation.context.assets.open(sample.file).use { stream ->
                     BitmapFactory.decodeStream(stream)
                 } ?: error("could not decode ${sample.file}")
-                val detections = detector.detectSync(bitmap)
+                val detections = when (val outcome = detector.detectSync(bitmap)) {
+                    is com.whatsbird.detect.DetectionResult.Success -> outcome.detections
+                    else -> emptyList()
+                }
                 bitmap.recycle()
                 if (detections.isNotEmpty()) withDetection++
                 val best = detections.maxByOrNull { it.score }

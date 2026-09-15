@@ -64,7 +64,9 @@ class SpeciesClassifier private constructor(
     }
 
     /**
-     * Returns up to [topK] predictions, best first. Never throws; returns empty on failure.
+     * Returns up to [topK] predictions, best first. Never throws; failures come back as
+     * [ClassificationResult.Failure] instead of an empty list, so "the model errored" cannot be
+     * confused with "the model was unsure".
      *
      * Serialised on the instance: the live preview classifies on the pipeline's own thread while a
      * shutter press re-identifies the still on the capture thread. The [Interpreter], its direct
@@ -72,11 +74,11 @@ class SpeciesClassifier private constructor(
      * native abort — no `runCatching` can intercept that.
      */
     @Synchronized
-    fun classify(bitmap: Bitmap, topK: Int = TOP_K): List<Prediction> {
-        if (bitmap.width <= 0 || bitmap.height <= 0) return emptyList()
-        return runCatching { topKOf(inferScores(bitmap), topK) }
+    fun classify(bitmap: Bitmap, topK: Int = TOP_K): ClassificationResult {
+        if (bitmap.width <= 0 || bitmap.height <= 0) return ClassificationResult.Unknown
+        return runCatching { ClassificationResult.of(topKOf(inferScores(bitmap), topK)) }
             .onFailure { Log.w(TAG, "classification failed", it) }
-            .getOrDefault(emptyList())
+            .getOrElse { ClassificationResult.Failure(it) }
     }
 
     /**
@@ -89,8 +91,8 @@ class SpeciesClassifier private constructor(
      * just under it and being reported as "bird, species unknown".
      */
     @Synchronized
-    fun classifyAveraged(bitmap: Bitmap, topK: Int = TOP_K): List<Prediction> {
-        if (bitmap.width <= 0 || bitmap.height <= 0) return emptyList()
+    fun classifyAveraged(bitmap: Bitmap, topK: Int = TOP_K): ClassificationResult {
+        if (bitmap.width <= 0 || bitmap.height <= 0) return ClassificationResult.Unknown
         return runCatching {
             val scores = inferScores(bitmap)
             val mirrored = BitmapOps.mirror(bitmap)
@@ -102,9 +104,9 @@ class SpeciesClassifier private constructor(
                     mirrored.recycle()
                 }
             }
-            topKOf(scores, topK)
+            ClassificationResult.of(topKOf(scores, topK))
         }.onFailure { Log.w(TAG, "averaged classification failed", it) }
-            .getOrDefault(emptyList())
+            .getOrElse { ClassificationResult.Failure(it) }
     }
 
     private fun inferScores(bitmap: Bitmap): FloatArray {

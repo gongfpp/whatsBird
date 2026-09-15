@@ -13,6 +13,7 @@
     <string name="cam_retry">重试</string>
 
     <string name="status_scanning">扫描中</string>
+    <string name="status_waiting">等待鸟类进入画面</string>
     <string name="status_model_loading">模型加载中…</string>
     <string name="status_detector_only">未装载鸟类识别模型，仅可检测</string>
     <string name="status_model_failed">模型加载失败，仅可拍照</string>
@@ -43,7 +44,7 @@
     <string name="set_save_labeled">仅带标签照片</string>
     <string name="set_save_both">原图 + 带标签照片</string>
     <string name="set_show_boxes">显示识别框</string>
-    <string name="set_use_gpu">优先使用 GPU（更快，部分机型可能不稳定）</string>
+    <string name="set_use_gpu">硬件加速识别（更快；如遇异常闪退可关闭）</string>
     <string name="set_confidence">显示门限</string>
     <string name="set_confidence_hint">数值越高越保守：更少鸟被命名，但误报也更少；越低则更多鸟被命名，但清单外的鸟更容易被误认成已知种名。三档：保守 / 平衡 / 更多候选。</string>
     <string name="set_preset_conservative">保守</string>

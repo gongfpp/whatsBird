@@ -48,6 +48,57 @@ jobs:
         working-directory: android
         run: ./gradlew :app:testDebugUnitTest
 
+      - name: Assemble debug APK
+        working-directory: android
+        run: ./gradlew :app:assembleDebug
+
+      # Release must actually build on CI, not only lint: R8, resource shrinking and the final
+      # packaging only run in this task. The release signing config fails loudly without keystore
+      # properties, so CI provides a throwaway keystore generated in the job — good enough to
+      # exercise the full release pipeline (signing included) without ever touching real signing
+      # material. The artefact is not distributed; it exists to prove the release path builds.
+      - name: Generate throwaway release keystore
+        working-directory: android
+        run: |
+          keytool -genkeypair -v \
+            -keystore "$RUNNER_TEMP/whatsbird-ci.jks" \
+            -storepass whatsbird-ci-store \
+            -keypass whatsbird-ci-store \
+            -alias whatsbird-ci \
+            -keyalg RSA -keysize 2048 -validity 30 \
+            -dname "CN=whatsBird CI, OU=CI, O=whatsBird, L=CI, S=CI, C=ZZ"
+
+      - name: Assemble release APK
+        working-directory: android
+        env:
+          WHATSBIRD_KEYSTORE: ${{ runner.temp }}/whatsbird-ci.jks
+          WHATSBIRD_KEYSTORE_PASSWORD: whatsbird-ci-store
+          WHATSBIRD_KEY_ALIAS: whatsbird-ci
+          WHATSBIRD_KEY_PASSWORD: whatsbird-ci-store
+        run: ./gradlew :app:assembleRelease
+
+      # The "completely offline" promise is a contract, not a tagline: assert on the *merged*
+      # manifest of the release build that the stripped network permissions did not come back.
+      # tools:node="remove" is applied by the manifest merger, so a merged manifest that still
+      # contains them means a new dependency reintroduced them in a way the strip no longer covers.
+      - name: Assert the release APK cannot reach the network
+        working-directory: android
+        run: |
+          MERGED=$(find app/build/intermediates/merged_manifests/release -name AndroidManifest.xml | head -1)
+          echo "merged manifest: $MERGED"
+          cat "$MERGED"
+          if grep -E "android\.permission\.(INTERNET|ACCESS_NETWORK_STATE)" "$MERGED"; then
+            echo "::error::network permission present in the merged release manifest — the offline contract is broken"
+            exit 1
+          fi
+
+      # The APK must be signed with the provided release keystore, never a debug one.
+      - name: Verify the release APK is signed
+        working-directory: android
+        run: |
+          APK=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
+          "$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME"/build-tools | sort -V | tail -1)/apksigner" verify --print-certs "$APK"
+
       - name: Upload reports
         if: always()
         uses: actions/upload-artifact@v4

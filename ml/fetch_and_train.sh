@@ -34,25 +34,29 @@
 # that never started.
 #
 # Usage: ./fetch_and_train.sh <data-dir> <out-dir> [--init-model <ckpt>] [extra train.py args...]
-cd "$(dirname "$0")" || exit 1
+set -euo pipefail
+cd "$(dirname "$0")"
 PY=${PY:-python3}
 
 DATA=${1:-data2}
 OUT=${2:-out4}
 shift 2 2>/dev/null || true
 
+# Every stage below is fail-fast: `set -e` means a non-zero exit from fetch, integrity or train
+# aborts the script with the stage's own exit code. This matters for automation — without it the
+# final `echo` could turn `train.py` failing into a script exit 0, and an agent or CI job would
+# read "training failed" as "task completed".
+
 echo "=== $(date '+%F %T') fetch into $DATA ==="
 "$PY" -u fetch_inat.py --out "$DATA" --per-species 320 --background 1200 --photo-size medium --workers 24
-echo "=== $(date '+%F %T') fetch exit=$? ==="
+echo "=== $(date '+%F %T') fetch completed ==="
 
 echo "=== $(date '+%F %T') verify splits in $DATA ==="
-"$PY" -u dataset_integrity.py --data "$DATA" --apply
-integrity=$?
-if [ $integrity -ne 0 ]; then
+if ! "$PY" -u dataset_integrity.py --data "$DATA" --apply; then
     echo "integrity check failed, refusing to train" >&2
     exit 1
 fi
 
 echo "=== $(date '+%F %T') fine-tune into $OUT ==="
 "$PY" -u train.py --data "$DATA" --out "$OUT" "$@"
-echo "=== $(date '+%F %T') train exit=$? ==="
+echo "=== $(date '+%F %T') train completed ==="

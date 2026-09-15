@@ -34,10 +34,10 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import http.client
 import json
 import os
-import random
 import sys
 import time
 import urllib.error
@@ -242,23 +242,35 @@ def collect(
     return observations
 
 
-def split_observations(observations: list[dict], rng: random.Random) -> dict[int, str]:
-    """80/10/10 by observation id, so no bird appears in two splits."""
-    ordered = sorted(observations, key=lambda o: o["observation_id"])
-    rng.shuffle(ordered)
-    count = len(ordered)
-    val_start = int(count * 0.8)
-    test_start = int(count * 0.9)
-    assignment: dict[int, str] = {}
-    for index, observation in enumerate(ordered):
-        if index < val_start:
-            split = "train"
-        elif index < test_start:
-            split = "val"
-        else:
-            split = "test"
-        assignment[observation["observation_id"]] = split
-    return assignment
+def split_bucket(observation_id: int, seed: int) -> str:
+    """Stable per-observation split: hash(seed + id) mod 100.
+
+    Shuffle-then-cut assignment is only stable for a *fixed* set of observations: add one species,
+    resume an interrupted fetch, or re-crawl anything, and the sorted/shuffled order changes, so an
+    observation that was in train can drift into test. That is exactly the cross-version leak the
+    integrity tooling cannot see — the tree and the manifest always agree with each other; it is
+    the *previous model* that disagrees with both. Hashing the observation id instead makes the
+    split a pure function of (seed, id): the same observation keeps its split across every future
+    dataset version and resume, forever.
+    """
+    bucket = int.from_bytes(
+        hashlib.md5(f"{seed}:{observation_id}".encode()).digest(), "big"
+    ) % 100
+    if bucket < 80:
+        return "train"
+    if bucket < 90:
+        return "val"
+    return "test"
+
+
+def split_observations(observations: list[dict], seed: int) -> dict[int, str]:
+    """80/10/10 by observation id, so no bird appears in two splits.
+
+    The assignment is stable across dataset versions (see [split_bucket]) — that is the whole
+    point. Per-species ratios land at roughly the same 80/10/10 because every observation draws an
+    independent uniform bucket; `emit` still caps each split at its configured count.
+    """
+    return {o["observation_id"]: split_bucket(o["observation_id"], seed) for o in observations}
 
 
 def emit(
@@ -266,7 +278,7 @@ def emit(
     observations: list[dict],
     out_dir: str,
     limits: dict[str, int],
-    rng: random.Random,
+    seed: int,
     manifest: list[PhotoRecord],
     used_photos: set[int],
     workers: int = 8,
@@ -285,7 +297,7 @@ def emit(
     different labels (which teaches the model that one image has two names). Callers run targets
     before background pools, so a photo shared with a distractor is kept as the target's.
     """
-    assignment = split_observations(observations, rng)
+    assignment = split_observations(observations, seed)
     planned: list[tuple[dict, str, str]] = []
     counts: dict[str, int] = defaultdict(int)
 
@@ -372,7 +384,6 @@ def main() -> int:
         args.prune = False
 
     licenses = tuple(code.strip() for code in args.licenses.split(",") if code.strip())
-    rng = random.Random(args.seed)
     out_dir = os.path.abspath(args.out)
     os.makedirs(out_dir, exist_ok=True)
 
@@ -394,7 +405,7 @@ def main() -> int:
         }
         observations = collect(species.scientific_name, licenses, args.per_species, args.photo_size)
         written = emit(
-            species.scientific_name, observations, out_dir, limits, rng, manifest, used_photos, args.workers
+            species.scientific_name, observations, out_dir, limits, args.seed, manifest, used_photos, args.workers
         )
         summary[species.scientific_name] = written
         total = sum(written.values())
@@ -414,13 +425,13 @@ def main() -> int:
     }
     for taxon in DISTRACTOR_BIRDS:
         observations = collect(taxon, licenses, args.per_distractor * 2, args.photo_size)
-        emit(BACKGROUND_LABEL, observations, out_dir, bg_limits_per_taxon, rng, manifest, used_photos, args.workers)
+        emit(BACKGROUND_LABEL, observations, out_dir, bg_limits_per_taxon, args.seed, manifest, used_photos, args.workers)
         print(f"  [bg bird] {taxon}", flush=True)
 
     non_bird_limits = {"train": max(20, args.background // (6 * 4)), "val": 8, "test": 8}
     for taxon in NON_BIRD_TAXA:
         observations = collect(taxon, licenses, non_bird_limits["train"] * 4, args.photo_size)
-        emit(BACKGROUND_LABEL, observations, out_dir, non_bird_limits, rng, manifest, used_photos, args.workers)
+        emit(BACKGROUND_LABEL, observations, out_dir, non_bird_limits, args.seed, manifest, used_photos, args.workers)
         print(f"  [bg non-bird] {taxon}", flush=True)
 
     manifest_path = os.path.join(out_dir, "manifest.jsonl")

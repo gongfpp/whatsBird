@@ -53,12 +53,13 @@ data class AppSettings(
     /**
      * Below this score the UI says "鸟类，暂未确定" instead of claiming a species.
      *
-     * 0.55 is not a taste call. Sweeping this knob over the 1612-photo held-out set
-     * (`ml/sweep_threshold.py --model out2/classifier_float16.tflite --data data2`): at 0.55 a name
-     * appears for 53.1% of listed-species photos and 85.7% of the shown names are right. At 0.60
-     * that is 47.7% / 88.2% — more than half the birds stay unnamed. At 0.50 it is 58.3% / 83.5%,
-     * but out-of-list birds get handed a listed name 15.2% of the time instead of 7.6%. 0.55 takes
-     * the coverage without letting the visible "it named the wrong bird" failure rate double.
+     * 0.55 is a development-stage empirical default, **not** a calibrated operating point: it was
+     * chosen from threshold sweeps whose held-out sets turned out to be contaminated across model
+     * versions, and the shipped model's corpus predates the licence-clean fetch defaults. Until a
+     * genuinely independent test set exists (a freshly trained model with its
+     * `training_provenance.json`, evaluated by `sweep_threshold.py` on data the model never saw),
+     * treat this number as a placeholder to be re-calibrated — do not cite the old sweep numbers
+     * as a quality baseline.
      */
     val confidenceThreshold: Float = DEFAULT_CONFIDENCE_THRESHOLD,
     /** Analyses per second. Preview stays smooth because analysis is throttled independently. */

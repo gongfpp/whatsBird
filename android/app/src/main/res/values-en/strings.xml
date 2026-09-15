@@ -13,6 +13,7 @@
     <string name="cam_retry">Retry</string>
 
     <string name="status_scanning">Scanning</string>
+    <string name="status_waiting">Waiting for a bird</string>
     <string name="status_model_loading">Loading models…</string>
     <string name="status_detector_only">No identifier model — detection only</string>
     <string name="status_model_failed">Model failed to load — capture only</string>
@@ -43,7 +44,7 @@
     <string name="set_save_labeled">Labeled only</string>
     <string name="set_save_both">Original + labeled</string>
     <string name="set_show_boxes">Show detection boxes</string>
-    <string name="set_use_gpu">Prefer GPU (faster, unstable on some devices)</string>
+    <string name="set_use_gpu">Hardware-accelerated ID (faster; turn off if the app crashes)</string>
     <string name="set_confidence">Display threshold</string>
     <string name="set_confidence_hint">Higher is more conservative: fewer birds get a name, but fewer wrong names too; lower gives more names but is more likely to mislabel an out-of-list bird as a listed one. Three levels: Conservative / Balanced / More candidates.</string>
     <string name="set_preset_conservative">Conservative</string>

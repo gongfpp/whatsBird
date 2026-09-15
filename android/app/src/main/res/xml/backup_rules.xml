@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Legacy backup rules for Android 11 (API 30) and below.
+
+  `data_extraction_rules.xml` is only read by Android 12+; every device still on Android 10/11 —
+  including the Android 10 reference device this project is verified on — follows
+  `android:fullBackupContent` instead. Without this file the crash logs in `files/crashes/` and the
+  BootGuard marker in `filesDir` would be silently copied into every D2D transfer and cloud backup
+  on those devices, breaking the promise made in SECURITY.md ("该目录不参与云备份").
+
+  The exclusions mirror data_extraction_rules.xml exactly; keep the two files in sync. Everything
+  else — chiefly the DataStore preferences — uses the default include behaviour.
+-->
+<full-backup-content>
+    <exclude domain="file" path="crashes/" />
+    <!-- BootGuard marker: a single file directly in filesDir, not a directory. -->
+    <exclude domain="file" path="model_boot_guard" />
+</full-backup-content>

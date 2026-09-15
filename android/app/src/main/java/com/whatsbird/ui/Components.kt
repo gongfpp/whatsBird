@@ -210,18 +210,50 @@ fun ZoomPill(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val label = if (zoomRatio <= 1.02f) {
+        "1x"
+    } else {
+        String.format("%.1fx", zoomRatio)
+    }
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(50))
             .background(0x99000000.toInt().let { Color(it) })
             .clickable(onClick = onClick)
+            .semantics { contentDescription = "zoom reset to 1x" }
             .padding(horizontal = 14.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = if (zoomRatio <= 1.02f) "1x" else String.format("%.1fx", zoomRatio),
+            text = label,
             style = MaterialTheme.typography.bodySmall,
             color = BirdColors.OnBackground,
+        )
+    }
+}
+
+/** One quick zoom preset (2x / 5x). Highlighted when it is the ratio currently in use. */
+@Composable
+fun ZoomPreset(
+    ratio: Float,
+    current: Float,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val active = kotlin.math.abs(current - ratio) < 0.05f
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(50))
+            .background((if (active) 0xCC17402E else 0x99000000).toInt().let { Color(it) })
+            .clickable(onClick = onClick)
+            .semantics { contentDescription = "set zoom ${ratio}x" }
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = "${ratio.toInt()}x",
+            style = MaterialTheme.typography.bodySmall,
+            color = if (active) BirdColors.Accent else BirdColors.OnBackground,
         )
     }
 }
