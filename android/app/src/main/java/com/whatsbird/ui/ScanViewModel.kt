@@ -265,11 +265,15 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
         }
         if (newDetector == null) {
             pipeline = null
-            capture = null
             _modelStatus.value = ModelStatus.FAILED
             // A construction failure is a caught exception, not an abort, so this run is safe to
             // repeat: disarm rather than penalise the next launch for it.
             bootGuard.clear()
+            // buildPipeline() cleared `capture` before loading started, and the UI now promises
+            // "模型加载失败，仅可拍照". Without this refresh the shutter stays dead whenever the
+            // detector finishes loading *after* the controller was attached (controller attach →
+            // model fail) or is torn down by a rebuild that then fails (GPU rebuild → model fail).
+            refreshCaptureHandler()
             return
         }
 
