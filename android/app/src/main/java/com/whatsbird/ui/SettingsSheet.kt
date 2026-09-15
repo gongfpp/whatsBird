@@ -18,6 +18,8 @@ package com.whatsbird.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -44,7 +46,7 @@ import com.whatsbird.settings.SaveMode
 import com.whatsbird.ui.theme.BirdColors
 import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun SettingsSheet(
     settings: AppSettings,
@@ -80,7 +82,13 @@ fun SettingsSheet(
             }
 
             SectionLabel(stringResource(R.string.set_save_mode))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            // FlowRow, not a fixed Row: narrow screens, landscape and large font scales wrap the
+            // chips instead of clipping or squeezing them.
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 FilterChip(
                     selected = settings.saveMode == SaveMode.ORIGINAL,
                     onClick = { onSaveMode(SaveMode.ORIGINAL) },
@@ -117,9 +125,10 @@ fun SettingsSheet(
             )
 
             SectionLabel(stringResource(R.string.set_confidence))
-            Row(
+            FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 FilterChip(
                     selected = settings.confidenceThreshold >= 0.59f && settings.confidenceThreshold <= 0.61f,

@@ -29,10 +29,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -46,11 +51,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -106,6 +116,17 @@ fun CameraScreen(viewModel: ScanViewModel = viewModel()) {
     // Give the overlay the same aspect the view will have, derived from the live configuration.
     val viewAspect = configuration.screenWidthDp.toFloat() / configuration.screenHeightDp.toFloat()
 
+    // Tap-to-focus is handled inside PreviewView (CameraController gestures). The view listener
+    // here only *observes* the tap and returns false, so the real focus gesture is untouched —
+    // this exists purely to mirror where focus was set, and the ring fades by itself.
+    var focusCenter by remember { mutableStateOf<Offset?>(null) }
+    LaunchedEffect(focusCenter) {
+        if (focusCenter != null) {
+            delay(900)
+            focusCenter = null
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -117,6 +138,12 @@ fun CameraScreen(viewModel: ScanViewModel = viewModel()) {
                     scaleType = PreviewView.ScaleType.FILL_CENTER
                     // TextureView keeps the overlay compositing predictable across devices.
                     implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+                    setOnTouchListener { _, event ->
+                        if (event.actionMasked == android.view.MotionEvent.ACTION_UP) {
+                            focusCenter = Offset(event.x, event.y)
+                        }
+                        false
+                    }
                 }
             },
             update = { it.controller = controller },
@@ -134,18 +161,30 @@ fun CameraScreen(viewModel: ScanViewModel = viewModel()) {
             modifier = Modifier.fillMaxSize(),
         )
 
+        FocusRing(center = focusCenter, modifier = Modifier.fillMaxSize())
+
+        // Status chips must clear the status bar and any display cutout, not sit under them.
         Row(
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(top = 40.dp),
+                .windowInsetsPadding(
+                    WindowInsets.safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
+                )
+                .padding(top = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             when (modelStatus) {
-                ModelStatus.READY -> if (overlay.isNotEmpty()) {
+                ModelStatus.READY -> {
+                    // A READY pipeline with no bird in frame is not "nothing to say": show the idle
+                    // chip so a silent camera is distinguishable from a stalled one.
                     StatusChip(
-                        text = stringResource(R.string.status_scanning),
-                        tone = ChipTone.Good,
+                        text = if (overlay.isEmpty()) {
+                            stringResource(R.string.status_waiting)
+                        } else {
+                            stringResource(R.string.status_scanning)
+                        },
+                        tone = if (overlay.isEmpty()) ChipTone.Idle else ChipTone.Good,
                     )
                 }
                 ModelStatus.LOADING -> StatusChip(
@@ -166,14 +205,40 @@ fun CameraScreen(viewModel: ScanViewModel = viewModel()) {
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 36.dp),
+                .windowInsetsPadding(
+                    WindowInsets.safeDrawing.only(
+                        WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal,
+                    ),
+                )
+                .padding(bottom = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            ZoomPill(
-                zoomRatio = zoomRatio,
-                onClick = { controller.setZoomRatio(1f) },
-            )
-            Spacer(Modifier.height(20.dp))
+            captureState.message?.let { message ->
+                CaptureFeedback(
+                    message = message,
+                    identified = captureState.identified,
+                )
+                Spacer(Modifier.height(16.dp))
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                ZoomPill(
+                    zoomRatio = zoomRatio,
+                    onClick = { controller.setZoomRatio(1f) },
+                )
+                // Quick presets: pinching is awkward one-handed in the field, so common ratios are
+                // one tap away. Only ratios the lens actually reaches are offered.
+                val maxZoom = zoomState?.maxZoomRatio ?: 1f
+                if (maxZoom >= 2f || zoomRatio > 1.02f) {
+                    ZoomPreset(ratio = 2f, current = zoomRatio, onClick = { controller.setZoomRatio(2f) })
+                }
+                if (maxZoom >= 5f) {
+                    ZoomPreset(ratio = 5f, current = zoomRatio, onClick = { controller.setZoomRatio(5f) })
+                }
+            }
+            Spacer(Modifier.height(16.dp))
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(36.dp),
@@ -189,16 +254,6 @@ fun CameraScreen(viewModel: ScanViewModel = viewModel()) {
                 )
                 SettingsGlyphButton(onClick = { showSettings = true })
             }
-        }
-
-        captureState.message?.let { message ->
-            CaptureFeedback(
-                message = message,
-                identified = captureState.identified,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 176.dp),
-            )
         }
     }
 
@@ -257,11 +312,13 @@ private fun CaptureFeedback(
 
 @Composable
 private fun SettingsGlyphButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val settingsLabel = stringResource(R.string.settings)
     Box(
         modifier = modifier
             .size(48.dp)
             .clip(CircleShape)
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .semantics { contentDescription = settingsLabel },
         contentAlignment = Alignment.Center,
     ) {
         Canvas(Modifier.size(24.dp)) {
