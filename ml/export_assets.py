@@ -22,7 +22,7 @@ Three things happen here, in this order:
    app must be fast on a mid-range phone but a quantisation drop that is too large has to be
    visible rather than assumed away.
 2. Both exports are evaluated on the held-out test split with the *TFLite* interpreter, and the
-   numbers are written to `docs/MODEL_CARD.md`. The plan's acceptance criteria are reported
+   numbers are written to `<out>/MODEL_CARD.md`. The plan's acceptance criteria are reported
    verbatim: how often a species name is shown, how often that name is right, and how often a bird
    that is not on the list gets mislabelled as one that is.
 3. The chosen model and the matching `species.json` are copied into the Android assets, so the
@@ -471,7 +471,7 @@ def write_model_card(path: str, report: dict, classes: list[str]) -> None:
         "2. 类别清单只覆盖中国大陆城市与水域常见鸟。清单外鸟种由 background 类兜底，但兜底不是保证。",
         f"3. 召回最低的三个目标是 {weakest_text}——这些是补数据时应当优先照顾的类。",
         "4. 测试集与训练集同源（同一平台、相似拍摄习惯），真实野外表现会低于上表数字。",
-        "5. 这些数字是离线证据。同一模型在真机上的复核见 `docs/ON_DEVICE_VERIFICATION.md`。",
+        "5. 这些数字是离线证据（Python TFLite 运行时）。同一模型在真机上的复核需另行执行真机验证，本仓库不保留其常设文档。",
         "",
     ]
     with open(path, "w", encoding="utf-8") as handle:

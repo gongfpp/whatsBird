@@ -46,6 +46,8 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import platform
+import subprocess
 import time
 
 os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
@@ -288,6 +290,121 @@ def class_weights(classes: list[str], train_dir: str) -> dict[int, float]:
     return {i: total / (len(classes) * c) for i, c in enumerate(present)}
 
 
+PROVENANCE_FILE = dataset_integrity.PROVENANCE_FILE
+
+
+def git_commit() -> str | None:
+    """The commit the weights were trained from; unknown when git is unavailable."""
+    try:
+        return subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        ).stdout.strip() or None
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
+def reject_cross_version_leakage(provenance: dict, photo_ids: dict, observation_ids: dict) -> None:
+    """Refuses a continuation run whose val/test photos the checkpoint already trained on.
+
+    `--init-model` means the checkpoint saw *its* training set. The integrity check only knows
+    about the current data directory — it cannot see that the old model trained on a photo that
+    this run just placed in `test`. Overlap between the old `train` ids and the new val/test ids is
+    exactly that leak; comparing photo ids catches shared files, comparing observation ids also
+    catches near-duplicate frames of the same bird uploaded under one observation.
+    """
+    overlap = dataset_integrity.cross_version_overlap(provenance, photo_ids, observation_ids)
+    if overlap is None:
+        print(
+            f"WARNING: {PROVENANCE_FILE} beside the checkpoint lists no training ids — "
+            "cross-version leakage cannot be checked for this run"
+        )
+        return
+    leak_photos, leak_observations = overlap
+    if not leak_photos and not leak_observations:
+        return
+    first_offenders = sorted(leak_observations)[:10] or sorted(leak_photos)[:10]
+    raise SystemExit(
+        "refusing to train: the init model has already seen photos from this run's val/test split\n"
+        f"  provenance: {provenance.get('git_commit', 'unknown commit')}\n"
+        f"  overlapping photos: {len(leak_photos)}  overlapping observations: {len(leak_observations)}\n"
+        "  those observations are training data for this model — move them out of val/test and rerun\n"
+        "  first offenders: " + ", ".join(str(x) for x in first_offenders)
+    )
+
+
+def imagenet_checkpoint_hash(backbone: str, input_size: int) -> str | None:
+    """Locates the Keras ImageNet checkpoint for the backbone and hashes it, when present.
+
+    The weights are downloaded once into `~/.keras/models/` (or `KERAS_HOME`). Hashing the actual
+    file puts the *upstream* pretrained base into the provenance chain instead of only naming it —
+    a rebuild that silently starts from a different checkpoint revision is then detectable.
+    """
+    home = os.environ.get("KERAS_HOME") or os.path.expanduser("~/.keras")
+    directory = os.path.join(home, "models")
+    if not os.path.isdir(directory):
+        return None
+    prefix = {"mobilenetv3small": "mobilenet_v3_small", "mobilenetv3large": "mobilenet_v3_large",
+              "efficientnetb0": "efficientnetb0"}.get(backbone)
+    if prefix is None:
+        return None
+    for name in sorted(os.listdir(directory)):
+        if name.startswith(prefix) and name.endswith((".h5", ".weights.h5")):
+            return dataset_integrity.sha256_file(os.path.join(directory, name))
+    return None
+
+
+def write_provenance(
+    out_dir: str,
+    photo_ids: dict[str, set],
+    observation_ids: dict[str, set],
+    data_dir: str,
+    args,
+    base_model: str,
+    base_model_hash: str | None,
+) -> None:
+    """Writes the provenance record that makes cross-version leakage checkable.
+
+    The manifest is authoritative for the ids; without a manifest the sets are recorded empty and
+    a later `--init-model` run prints a warning instead of silently assuming the absence of a leak.
+    A continuation run inherits the init model's seen-set: the new weights have seen *its* training
+    data too, and that union is what a future run must be checked against.
+    """
+    sha256 = dataset_integrity.sha256_file
+    train_photos = set(photo_ids["train"])
+    train_observations = set(observation_ids["train"])
+    inherited = dataset_integrity.load_provenance(args.init_model) if args.init_model else None
+    if inherited is not None:
+        # The old ids keep their identity even though the old manifest no longer travels with the
+        # checkpoint — without the union, a second continuation run would look leak-free while
+        # still having trained on the first generation's data.
+        train_photos |= set(inherited.get("train_photo_ids") or [])
+        train_observations |= set(inherited.get("train_observation_ids") or [])
+    provenance = {
+        "git_commit": git_commit(),
+        "dataset_manifest_sha256": sha256(os.path.join(data_dir, "manifest.jsonl")),
+        "train_photo_ids": sorted(train_photos),
+        "train_observation_ids": sorted(train_observations),
+        "val_photo_ids": sorted(photo_ids["val"]),
+        "test_photo_ids": sorted(photo_ids["test"]),
+        "val_observation_ids": sorted(observation_ids["val"]),
+        "test_observation_ids": sorted(observation_ids["test"]),
+        "base_model": base_model,
+        "base_model_hash": base_model_hash,
+        "continued_from": os.path.basename(os.path.abspath(args.init_model)) if args.init_model else None,
+        "training_environment": {
+            "python": platform.python_version(),
+            "tensorflow": getattr(tf, "__version__", None),
+            "platform": platform.platform(),
+            "seed": args.seed,
+        },
+    }
+    with open(os.path.join(out_dir, PROVENANCE_FILE), "w", encoding="utf-8") as handle:
+        json.dump(provenance, handle, ensure_ascii=False, indent=2)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--data", default="data")
@@ -344,6 +461,20 @@ def main() -> int:
             )
         print("WARNING: --allow-split-mismatch given; reported accuracy will be inflated\n")
 
+    photo_ids, observation_ids = dataset_integrity.provenance_ids(data_dir)
+    if args.init_model:
+        # Continuation runs have a second leak channel the tree check cannot see: the checkpoint's
+        # own training history. If it already trained on what this run calls val/test, checking the
+        # tree is useless — the leak spans dataset versions.
+        old_provenance = dataset_integrity.load_provenance(args.init_model)
+        if old_provenance is not None:
+            reject_cross_version_leakage(old_provenance, photo_ids, observation_ids)
+        else:
+            print(
+                f"WARNING: {args.init_model} has no {PROVENANCE_FILE} beside it; cross-version "
+                "leakage against its training history cannot be checked"
+            )
+
     classes = class_order()
     num_classes = len(classes)
     train_dir = os.path.join(data_dir, "images", "train")
@@ -371,8 +502,14 @@ def main() -> int:
             )
         backbone = find_backbone(model)
         print(f"continuing from {args.init_model}; phase 1 skipped")
+        base_model = os.path.basename(os.path.abspath(args.init_model))
+        base_model_hash = dataset_integrity.sha256_file(os.path.abspath(args.init_model))
     else:
         model, backbone = build_model(args.backbone, args.input_size, num_classes, args.dropout)
+        base_model = f"keras:{args.backbone} imagenet-pretrained"
+        # ImageNet checkpoints are fetched and cached by Keras at build time; the file lives in
+        # the TF cache directory and is hashed here if it can be located.
+        base_model_hash = imagenet_checkpoint_hash(args.backbone, args.input_size)
 
     weights = class_weights(classes, train_dir)
     print(f"classes={num_classes} backbone={args.backbone} input={args.input_size}")
@@ -479,6 +616,9 @@ def main() -> int:
     }
     with open(os.path.join(out_dir, "train_metrics.json"), "w", encoding="utf-8") as handle:
         json.dump(metrics, handle, indent=2)
+
+    write_provenance(out_dir, photo_ids, observation_ids, data_dir, args, base_model, base_model_hash)
+    print(f"provenance: {os.path.join(out_dir, PROVENANCE_FILE)}")
 
     print(json.dumps(metrics, indent=2))
     print(f"saved {final_path}")

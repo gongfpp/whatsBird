@@ -12,4 +12,10 @@
 
 真机测试包含 36 张公开来源的 iNaturalist 小尺寸样本。逐张来源、作者署名和许可记录见 [sample-attributions.json](../android/app/src/androidTest/assets/sample-attributions.json)。这些图片不是用户手机拍摄照片，仓库中的测试副本不包含 EXIF 数据。
 
-当前分类模型仍属于开发阶段模型。历史训练结果和仓库内测试样本只能用于开发回归，不应被视为独立测试集上的正式准确率证明。模型质量评估应使用与训练、调参和模型选择过程相互独立的数据集。
+当前分类模型仍属于开发阶段模型，**不是 `v1.0.0` 发布候选**：训练语料含 CC BY-SA 照片（许可链未闭环，
+见 [MODEL_LICENSES.md](../MODEL_LICENSES.md)），ImageNet 预训练底座的 provenance 记录也尚未随权重固化。
+历史训练结果和仓库内测试样本只能用于开发回归，不应被视为独立测试集上的正式准确率证明。
+模型质量评估应使用与训练、调参和模型选择过程相互独立的数据集；每次重训的来源链
+（git 提交、manifest 哈希、训练/验证/测试集的照片与观察 id、基础 checkpoint 及其哈希）
+由 `ml/train.py` 写入产物目录的 `training_provenance.json`。发布前重训完成后，本表与
+许可状态需同步更新。

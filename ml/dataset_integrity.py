@@ -38,6 +38,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import shutil
@@ -45,6 +46,7 @@ from dataclasses import dataclass, field
 
 SPLITS = ("train", "val", "test")
 IMAGE_SUFFIXES = (".jpg", ".jpeg", ".png")
+PROVENANCE_FILE = "training_provenance.json"
 
 
 @dataclass
@@ -110,6 +112,68 @@ def load_manifest(data_dir: str) -> dict[str, str]:
     """Maps image filename -> split. The filename is the iNaturalist photo id, so it identifies the
     source photo no matter which split directory a copy happens to sit in."""
     return {os.path.basename(record["file"]): record["split"] for record in load_records(data_dir)}
+
+
+def sha256_file(path: str) -> str | None:
+    digest = hashlib.sha256()
+    try:
+        with open(path, "rb") as handle:
+            for chunk in iter(lambda: handle.read(1 << 20), b""):
+                digest.update(chunk)
+    except OSError:
+        return None
+    return digest.hexdigest()
+
+
+def provenance_ids(data_dir: str) -> tuple[dict[str, set], dict[str, set]]:
+    """Photo ids and observation ids per split, straight from the authoritative manifest.
+
+    The manifest — not the directory tree — is the source of truth here: provenance records which
+    photos a model *was supposed to have seen*, and the tree can be repaired independently of that
+    history.
+    """
+    photo: dict[str, set] = {split: set() for split in SPLITS}
+    observation: dict[str, set] = {split: set() for split in SPLITS}
+    for record in load_records(data_dir):
+        photo[record["split"]].add(record["photo_id"])
+        observation[record["split"]].add(record["observation_id"])
+    return photo, observation
+
+
+def load_provenance(model_path: str) -> dict | None:
+    """Reads the provenance of a checkpoint, from beside the checkpoint file itself.
+
+    Lives in [dataset_integrity] so it can be checked (and tested) without importing the training
+    stack, which drags TensorFlow in.
+    """
+    path = os.path.join(os.path.dirname(os.path.abspath(model_path)), PROVENANCE_FILE)
+    if not os.path.isfile(path):
+        return None
+    with open(path, encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def cross_version_overlap(
+    provenance: dict,
+    photo_ids: dict[str, set],
+    observation_ids: dict[str, set],
+) -> tuple[set, set] | None:
+    """Photos/observations a checkpoint trained on that the new run puts in val/test.
+
+    A tree check passes even when the leak spans dataset versions: the manifest and the tree agree
+    with each other, it is the *previous model* that disagrees with both. Returns the overlapping
+    ids, or ``None`` when the provenance records no training ids at all (the caller must then warn
+    instead of claiming the absence of a leak).
+    """
+    seen_photos = set(provenance.get("train_photo_ids") or [])
+    seen_observations = set(provenance.get("train_observation_ids") or [])
+    if not seen_photos and not seen_observations:
+        return None
+    overlap_photos = (seen_photos & photo_ids["val"]) | (seen_photos & photo_ids["test"])
+    overlap_observations = (seen_observations & observation_ids["val"]) | (
+        seen_observations & observation_ids["test"]
+    )
+    return overlap_photos, overlap_observations
 
 
 def scan_tree(data_dir: str) -> dict[str, list[str]]:

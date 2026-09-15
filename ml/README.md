@@ -11,7 +11,11 @@ App 不训练、不下载、不联网，只读取这里导出的产物。
 对一个"对着小区树上的鸟拍一张"的 App 来说，识别不出最常见的鸟等于不可用。
 
 所以本目录用 iNaturalist 的 CC 许可照片，针对中国大陆常见鸟种清单做迁移训练。
-详见 [随包模型与测试图片来源](../docs/MODELS.md)。当前模型的质量限制以 [整改复验报告](../docs/ACCEPTANCE_RECHECK_2026-09-14.md) 为准，以下训练记录保留作历史参考。
+详见 [随包模型与测试图片来源](../docs/MODELS.md)。
+
+> **当前随包模型仍是开发阶段模型，不是可发布版本。** 它的语料包含 CC BY-SA 照片
+> （见 [MODEL_LICENSES.md](../MODEL_LICENSES.md)），且历史阈值/精度数据受到跨版本污染，
+> 不能作为质量基线。发布前必须用干净语料重训并建立独立测试集；下文的历史记录仅作背景参考。
 
 ## 流程
 
@@ -29,7 +33,12 @@ $PY fetch_inat.py --out data --per-species 150 --background 600
 # 2.5 抓取被中断过就必须查切分完整性，否则训练出来的数字是泄漏（见下节）
 $PY dataset_integrity.py --data data --apply
 
+# 2.6 切分/泄漏防护的单元测试（不依赖 TensorFlow）
+$PY test_integrity.py
+
 # 3. 迁移训练（MobileNetV3-Small，两阶段）
+#    续训时必须用 --init-model 指向带 training_provenance.json 的旧产物目录，
+#    train.py 会自动拒绝「旧模型见过本次 val/test」的跨版本泄漏
 $PY train.py --data data --out out
 
 # 4. 导出 TFLite、评测、并把产物装进 App
@@ -45,6 +54,7 @@ $PY export_assets.py --data data --out out --android ../android/app/src/main/ass
 | `out/classifier_float32.tflite` | 浮点版，作为量化精度损失的对照 |
 | `out/eval_report.json` | 测试集指标，机读 |
 | `out/MODEL_CARD.md` | 模型卡，人读，含各类召回与已知限制 |
+| `out/training_provenance.json` | 训练来源链：git 提交、manifest 哈希、train/val/test 的照片与观察 id、基础 checkpoint 及其哈希。续训时的泄漏检查与将来的独立测试集重建都靠它 |
 | `../android/app/src/main/assets/models/{bird_classifier.tflite,species.json}` | App 实际加载的文件 |
 
 `species.json` 由 `export_assets.py` 生成，类别顺序直接来自 `common_birds.py`，
@@ -90,8 +100,19 @@ $PY dataset_integrity.py --data data2 --apply
 
 判定的依据是 manifest，它是「这张照片属于哪个 split」的唯一权威；文件名就是 iNaturalist 的
 photo id，所以同一张源图无论出现在哪个目录都能被认出来。另外 `fetch_inat.py` 现在按 photo_id
-**全局去重**：近缘种会互相 cross-list 照片，同一张图此前既可能进 `train/` 又进 `test/`，
+**全局去重**：近缘种会互相 cross-list 照片，同一张图此前既可能进 `train/` 又可能进 `test/`，
 也可能在 `train/` 里挂着两个种名。
+
+### 切分稳定性与跨版本泄漏
+
+`fetch_inat.py` 的切分是 `hash(seed + observation_id) % 100` 的纯函数，不再依赖
+「排序 → shuffle → 按比例切」：以后 data、data2 甚至断点续抓，同一个观察永远落在同一个
+split，新增物种或补抓都不会让旧照片从 train 漂到 test。
+
+跨版本泄漏（旧模型见过本次 val/test 的照片）靠 provenance 防线兜底：`train.py` 每次训练都会
+在产物目录写 `training_provenance.json`（训练集照片/观察 id、manifest 哈希、基础 checkpoint
+及其哈希、训练环境）。用 `--init-model` 续训时会自动对比旧模型 seen 集与本次 val/test，
+有重叠直接拒绝训练——这正是此前「integrity 全绿、实际仍在泄漏」的那类事故的程序化防线。
 
 ## 定位「识别不准」
 
@@ -133,13 +154,12 @@ $PY sweep_threshold.py --rows-in /tmp/rows.json --min-precision 0.75 --grid
 `--grid` 打印「门限 × 差距门限」的完整二维面（覆盖率/精确率）。`--rows-in/--rows-out` 把逐图结果
 缓存下来，因为推理是唯一慢的部分，而选操作点要反复换约束看表。
 
-两个已知事实（2026-09-14，v2 模型，829 张测试集）：
+两个已失效的结论（2026-09-14 记录，**证据已被跨版本污染，仅供流程参考，勿引用数字**）：
 
-- **门限 ≥ 0.55 时差距门限完全不生效**，所以出厂门限下 `STILL_MARGIN` 是零成本的安全网，只在用户
-  把门限滑到 0.50 以下时才起作用；
-- 在「精确率 ≥ 80% 且清单外误报 ≤ 15%」的约束下扫描推荐 **0.65**，而 App 出厂用 **0.60**。
-  0.60 多给 3.6 个百分点的覆盖率，代价是已显示种名的正确率从 82.7% 降到 79.8%。
-  这是政策选择，不是对错问题。
+- 当时的测试集上「门限 ≥ 0.55 时差距门限不生效」——但那批测试数据后续版本有泄漏，这条要在
+  干净独立测试集上重新验证；
+- 操作点选择流程本身仍然成立：先定约束（精确率下限、清单外误报上限），再在约束内选门限，
+  覆盖率与已命名正确率之间的取舍是政策选择。**数值需要用新模型 + 新测试集重新标定。**
 
 ## 检测模型（不训练，直接取官方发布件）
 
@@ -153,9 +173,9 @@ curl -sL -o ../android/app/src/main/assets/models/bird_detector.tflite \
 ```
 
 官方还发布 `efficientdet_lite0/float32`（13,836,895 B，输入 320×320）与
-`efficientdet_lite2/int8`、`efficientdet_lite2/float32`。真机同条件对比记录在
-`../docs/ON_DEVICE_VERIFICATION.md`：Lite0@320 的留出集出框率 73.3%、Lite2@448 为 83.3%，
-且 Lite2 的文件反而更小。**换这一档模型必须复测检测延迟**——Lite2 比 Lite0 慢一倍多，
+`efficientdet_lite2/int8`、`efficientdet_lite2/float32`（当时真机对比：Lite0@320 与 Lite2@448 的
+留出集出框率约 73% vs 83%，Lite2 文件反而更小；该对比所用文档已从仓库移除，数字未在独立
+测试集上复核）。**换这一档模型必须复测检测延迟**——Lite2 比 Lite0 慢一倍多，
 GPU 委托下才落在 8 次/秒的节流预算内。
 
 模型自带 COCO 标签表（存在 TFLite metadata 里），所以 `bird` 这个类是按名字过滤的，
@@ -163,35 +183,22 @@ GPU 委托下才落在 8 次/秒的节流预算内。
 
 ## 数据翻倍之后：为什么没有直接换掉线上模型（2026-09-14）
 
-`data2`（51 种 × 320 + background）训出的 `out4` 与前代 `out2` 在同一张 **1612 张冻结测试集**上：
+> 注：下表的具体数字来自当时那张 1612 张「冻结测试集」，而该测试集后来被确认存在跨版本
+> 污染——旧模型见过其中的照片，数字整体偏乐观。**保留这一节是因为机制分析仍然成立，
+> 数值本身不可再作为质量基线引用。**
 
-| 指标 | out2（6.4k 训练图） | out4（13.3k 训练图） |
-| --- | --- | --- |
-| top-1 准确率 | 0.605 | **0.616** |
-| 宏平均召回（排除 background） | 0.6138 | 0.6206 |
-| 门限 0.60 的覆盖率 | **47.7%** | 47.1% |
-| 门限 0.60 已命名者正确率 | 88.2% | **88.9%** |
-| 门限 0.60 清单外鸟被取名 | **4/66 = 6.1%** | 14/66 = **21.2%** |
+`data2`（51 种 × 320 + background）训出的 `out4` 与前代 `out2` 的对比显示：
 
-结论是**没有赢家**：准确率 +1.1pp，但覆盖率持平甚至略跌，而「清单外鸟被戴上已知种名」的误报
-翻了三倍。对「对着随机一只鸟拍」的用法来说，最后一列恰恰是最刺眼的失败——宁可显示「鸟类」，
-不要自信地报错名字。逐类看也是涨跌互现（`Turdus mandarinus` +20.7pp、`Phoenicurus auroreus`
-+18.8pp，而 `Streptopelia orientalis` −28.1pp、`Corvus macrorhynchos` −21.9pp）。
+- top-1 准确率与宏平均召回只有小幅变化（约 +1pp 量级）；
+- 覆盖率持平甚至略跌；
+- 「清单外鸟被戴上已知种名」的误报大幅上升（约翻三倍）。对「对着随机一只鸟拍」的用法来说
+  这是最刺眼的失败——宁可显示「鸟类」，不要自信地报错名字。逐类表现涨跌互现。
 
-**机制**：目标类照片翻倍，background 预算没跟着涨（train 372 → 502 张），于是 background 占比
-5.8% → 3.8%，目标:背景 16.4:1 → 25.5:1。`class_weights` 是反频率的，本应补偿，但补偿后的**有效**
-强调度比也一起漂了：
-
-```
-data : bg 权重 0.334 / 目标 1.036 = 2.75×
-data2: bg 权重 0.510 / 目标 0.999 = 1.96×   ← 背景被相对弱化了 29%
-```
-
-所以下一步不是「再抓更多目标数据」，而是**把背景的份量与多样性补回来**，两个选择：
-抓更多 DISTRACTOR_BIRDS 照片（让 train 里 background ≈ 6%，按 12803 目标图需 ~780 张），
-或在训练侧把 background 的权重乘回 ~1.4×。前者更彻底（反频率权重补不了多样性不足），后者免费可试。
-
-在此之前，线上仍用 `out2`。
+**机制**：目标类照片翻倍，background 预算没跟着涨，background 占比从 ~5.8% 稀释到 ~3.8%。
+`class_weights` 是反频率的，本应补偿，但补偿后的**有效**强制度比也一起漂了（背景被相对弱化
+约三成）。所以下一步不是「再抓更多目标数据」，而是**把背景的份量与多样性补回来**：抓更多
+DISTRACTOR_BIRDS 照片（让 train 里 background ≈ 6%），或在训练侧把 background 的权重乘回
+~1.4×。前者更彻底（反频率权重补不了多样性不足），后者免费可试。
 
 ## 类别顺序
 
