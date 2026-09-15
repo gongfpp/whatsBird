@@ -143,7 +143,7 @@ class BirdPipelineOnDeviceTest {
             val frame = Bitmap.createScaledBitmap(decoded, 1280, 720, true)
             if (frame !== decoded) decoded.recycle()
             listed += 1
-            if (detector.detectSync(frame).isNotEmpty()) return frame to file
+            if (detector.detectSync(frame).detectionsOrNull?.isNotEmpty() == true) return frame to file
             Log.i(TAG, "  $file: detector found no bird; trying the next bundled sample")
             frame.recycle()
         }

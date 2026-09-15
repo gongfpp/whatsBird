@@ -81,7 +81,10 @@ class ClassifierOnDeviceTest {
             val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
             assertNotNull("could not decode ${sample.file}", bitmap)
 
-            val predictions = classifier!!.classify(bitmap!!)
+            val predictions = when (val classified = classifier!!.classify(bitmap!!)) {
+                is com.whatsbird.classify.ClassificationResult.Success -> classified.predictions
+                else -> error("classify() failed or produced no ranking for ${sample.file}: $classified")
+            }
             bitmap.recycle()
             assertTrue("classify() returned no predictions for ${sample.file}", predictions.isNotEmpty())
 
@@ -187,7 +190,10 @@ class ClassifierOnDeviceTest {
                 val bitmap = instrumentation.context.assets.open(sample.file).use { stream ->
                     BitmapFactory.decodeStream(stream)
                 } ?: error("could not decode ${sample.file}")
-                val detections = detector.detectSync(bitmap)
+                val detections = when (val outcome = detector.detectSync(bitmap)) {
+                    is com.whatsbird.detect.DetectionResult.Success -> outcome.detections
+                    else -> emptyList()
+                }
                 bitmap.recycle()
                 if (detections.isNotEmpty()) withDetection++
                 val best = detections.maxByOrNull { it.score }

@@ -20,6 +20,7 @@ import android.graphics.Bitmap
 import android.graphics.RectF
 import android.os.SystemClock
 import android.util.Log
+import com.whatsbird.classify.ClassificationResult
 import com.whatsbird.classify.Prediction
 import com.whatsbird.classify.SpeciesClassifier
 import com.whatsbird.detect.BirdDetector
@@ -66,10 +67,22 @@ data class PipelineStats(
     val classificationLatencyMs: Float = 0f,
     /** Cumulative dropped/throttled frames since the pipeline started. */
     val droppedFrames: Int = 0,
+    /** Cumulative classifier runtime failures — errors, not "unsure" verdicts. */
+    val inferenceFailures: Int = 0,
     val trackedBirds: Int = 0,
     /** Latency from the first detection result to the first stable (CONFIRMED) species name. */
     val firstStableNameMs: Long = 0L,
 )
+
+/** The outcome of identifying one still photo. */
+sealed interface StillIdentification {
+
+    /** Inference ran; carry the label as evaluated from the ranked predictions. */
+    data class Label(val label: TrackLabel) : StillIdentification
+
+    /** Inference failed at runtime; no verdict exists for this photo. */
+    data class Failure(val error: Throwable) : StillIdentification
+}
 
 /**
  * Owns the frame → label chain: detect, associate, classify on demand, stabilise, publish.
@@ -176,6 +189,13 @@ class BirdPipeline(
     private val framesDetected = AtomicInteger(0)
     private val classificationsDone = AtomicInteger(0)
     private val droppedFrames = AtomicInteger(0)
+
+    /**
+     * Cumulative count of classifier runtime failures in the preview path. A model that errors has
+     * to stay visible somewhere — without this counter a broken classifier looks exactly like a
+     * model that was simply unsure, which is precisely the failure the review called out.
+     */
+    private val inferenceFailures = AtomicInteger(0)
     private var detectionLatency = 0f
     private var classificationLatency = 0f
     private var statsWindowStart = SystemClock.elapsedRealtime()
@@ -333,7 +353,7 @@ class BirdPipeline(
                     }
 
                     val started = SystemClock.elapsedRealtime()
-                    val predictions = try {
+                    val result = try {
                         classifier.classify(job.crop)
                     } catch (t: Throwable) {
                         failed = true
@@ -346,19 +366,29 @@ class BirdPipeline(
                     classificationLatency = classificationLatency * 0.7f + took * 0.3f
                     job.crop.recycle()
 
+                    // A runtime failure must not be fed to the stabiliser as an observation: from
+                    // here the failure is counted and visible in the stats, so "the model is
+                    // broken" stays distinguishable from "the model was unsure".
+                    if (result is ClassificationResult.Failure) {
+                        inferenceFailures.incrementAndGet()
+                        Log.e(TAG, "classify track=${job.trackId} failed: ${result.error.message}", result.error)
+                        mem.enqueued = false
+                        break
+                    }
+
                     mem.enqueued = false
                     mem.lastClassifyMs = job.timestampMs
                     classificationsDone.incrementAndGet()
-                    if (predictions.isNotEmpty()) {
+                    if (result is ClassificationResult.Success) {
                         // One line per classification (~1-2/s at the live throttle). This is the only
                         // place that says what the model actually answered, as opposed to what the
                         // vote did with it — without it, "the name is wrong" cannot be split into
                         // "bad model" versus "bad voting".
-                        val top = predictions.first()
+                        val top = result.predictions.first()
                         Log.i(TAG, "classify track=${job.trackId} ${took}ms top=${top.classIndex}:${"%.3f".format(top.score)}")
-                        stabilizer.observe(job.trackId, predictions, job.timestampMs)
+                        stabilizer.observe(job.trackId, result.predictions, job.timestampMs)
                     } else {
-                        Log.w(TAG, "classify track=${job.trackId} produced no predictions")
+                        Log.w(TAG, "classify track=${job.trackId} produced no usable ranking")
                     }
                     processed += 1
                 }
@@ -445,6 +475,7 @@ class BirdPipeline(
                 detectionLatencyMs = detectionLatency,
                 classificationLatencyMs = classificationLatency,
                 droppedFrames = dropped,
+                inferenceFailures = inferenceFailures.get(),
                 trackedBirds = tracker.currentSnapshot().size,
                 firstStableNameMs = firstStableNameMs,
             )
@@ -462,13 +493,14 @@ class BirdPipeline(
                 Log.i(
                     TAG,
                     ("live previewFps=%.1f detectFps=%.1f classifyFps=%.1f detectMs=%.0f " +
-                        "classifyMs=%.0f dropped=%d birds=%d firstStable=%dms").format(
+                        "classifyMs=%.0f dropped=%d failures=%d birds=%d firstStable=%dms").format(
                             previewFps,
                             detectionFps,
                             classificationFps,
                             detectionLatency,
                             classificationLatency,
                             dropped,
+                            inferenceFailures.get(),
                             tracker.currentSnapshot().size,
                             firstStableNameMs,
                         ),
@@ -486,22 +518,30 @@ class BirdPipeline(
      * Runs on the capture thread while the preview classifier may be mid-inference; the mutual
      * exclusion lives in [SpeciesClassifier.classify].
      */
-    fun identifyStill(frame: Bitmap, box: RectF): TrackLabel {
-        val classifier = classifier ?: return TrackLabel(LabelKind.UNKNOWN)
+    fun identifyStill(frame: Bitmap, box: RectF): StillIdentification {
+        val classifier = classifier ?: return StillIdentification.Label(TrackLabel(LabelKind.UNKNOWN))
         val crop = BitmapOps.crop(frame, box, dictionary?.cropPaddingRatio ?: DEFAULT_CROP_PADDING)
-            ?: return TrackLabel(LabelKind.UNKNOWN)
-        val predictions = classifier.classifyAveraged(crop)
+            ?: return StillIdentification.Label(TrackLabel(LabelKind.UNKNOWN))
+        val result = classifier.classifyAveraged(crop)
         crop.recycle()
-        val label = evaluateStill(predictions)
+        val label = when (result) {
+            is ClassificationResult.Success -> evaluateStill(result.predictions)
+            is ClassificationResult.Unknown -> TrackLabel(LabelKind.UNKNOWN)
+            is ClassificationResult.Failure -> {
+                Log.w(TAG, "still classification failed", result.error)
+                return StillIdentification.Failure(result.error)
+            }
+        }
         // The saved photo is the artefact a user judges the app by, and "it said 鸟类" is equally
         // consistent with "no candidate" and "a candidate just under the bar". Logging the ranked
         // candidates next to the verdict is what makes those two separable from a field report.
         Log.i(
             TAG,
             "still box=${box.toShortString()} verdict=$label candidates=" +
-                predictions.take(3).joinToString { "${it.classIndex}:${"%.3f".format(it.score)}" },
+                (result as? ClassificationResult.Success)?.predictions.orEmpty()
+                    .take(3).joinToString { "${it.classIndex}:${"%.3f".format(it.score)}" },
         )
-        return label
+        return StillIdentification.Label(label)
     }
 
     /**
@@ -544,6 +584,7 @@ class BirdPipeline(
         framesDetected.set(0)
         classificationsDone.set(0)
         droppedFrames.set(0)
+        inferenceFailures.set(0)
         firstResultCaptured.set(false)
         firstResultMs = 0L
         firstStableNameMs = 0L

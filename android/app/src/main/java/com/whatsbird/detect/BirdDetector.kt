@@ -146,13 +146,23 @@ class BirdDetector(context: Context, useGpu: Boolean) : Closeable {
         }.isSuccess
     }
 
-    /** Synchronous detection for still photos; boxes are normalised to the upright bitmap. */
-    fun detectSync(bitmap: Bitmap): List<RawDetection> {
-        val detector = imageDetector ?: return emptyList()
+    /**
+     * Synchronous detection for still photos; boxes are normalised to the upright bitmap.
+     *
+     * Failures are reported as [DetectionResult.Failure] rather than an empty list so the caller
+     * can tell "the model works and there is no bird" from "the model could not run".
+     */
+    fun detectSync(bitmap: Bitmap): DetectionResult {
+        val detector = imageDetector
+            ?: return DetectionResult.Failure(
+                IllegalStateException("still-image detector unavailable; capture will run without labels"),
+            )
         return runCatching {
             detector.detect(BitmapImageBuilder(bitmap).build()).detections().mapNotNull { it.asBird() }
                 .map { it.normalisedTo(bitmap) }
-        }.onFailure { Log.w(TAG, "still-image detection failed", it) }.getOrDefault(emptyList())
+        }.onFailure { Log.w(TAG, "still-image detection failed", it) }.map { detections ->
+            if (detections.isEmpty()) DetectionResult.NoBird else DetectionResult.Success(detections)
+        }.getOrElse { DetectionResult.Failure(it) }
     }
 
     override fun close() {

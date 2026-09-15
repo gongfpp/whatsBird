@@ -19,6 +19,7 @@ package com.whatsbird.pipeline
 import android.graphics.Bitmap
 import android.graphics.RectF
 import com.whatsbird.detect.RawDetection
+import com.whatsbird.label.LabelKind
 import com.whatsbird.label.LabelStabilizer
 import com.whatsbird.track.BirdTracker
 import org.junit.Assert.assertEquals
@@ -172,6 +173,25 @@ class BirdPipelineRecoveryTest {
             assertTrue("preview FPS must count the frames the camera delivered", stats.previewFps > 0f)
             assertEquals("no detector ran, so detection FPS must be zero", 0f, stats.detectionFps, 0.001f)
             assertEquals("no classifier ran, so classification FPS must be zero", 0f, stats.classificationFps, 0.001f)
+        } finally {
+            pipeline.close()
+        }
+    }
+
+    /**
+     * The model being absent (not loaded, dictionary empty) is not a runtime failure: it is a
+     * degraded mode the UI knows about. identifyStill must answer with an UNKNOWN label — not a
+     * Failure — so the capture path keeps distinguishing "model unavailable" from "no bird" without
+     * treating a missing model as a broken model.
+     */
+    @Test
+    fun `identifyStill answers UNKNOWN without classifier instead of failing`() {
+        val pipeline = newPipeline(BirdTracker())
+        try {
+            val frame = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888)
+            val outcome = pipeline.identifyStill(frame, RectF(0.2f, 0.2f, 0.5f, 0.5f))
+            assertTrue("expected Label, got $outcome", outcome is StillIdentification.Label)
+            assertEquals(LabelKind.UNKNOWN, (outcome as StillIdentification.Label).label.kind)
         } finally {
             pipeline.close()
         }

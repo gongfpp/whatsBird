@@ -95,7 +95,7 @@ class PhotoDiagnosisOnDeviceTest {
                     Log.w(TAG, "    decode failed")
                     continue
                 }
-                val detections = detector.detectSync(decoded)
+                val detections = detector.detectSync(decoded).detectionsOrNull.orEmpty()
                 Log.i(TAG, "    detector found ${detections.size} bird(s)")
                 if (detections.isNotEmpty()) foundAnyBird = true
                 for ((index, detection) in detections.withIndex()) {
@@ -133,7 +133,13 @@ class PhotoDiagnosisOnDeviceTest {
             Log.i(TAG, "    框$ordinal 检测=${"%.2f".format(detection.score)} → 裁剪被拒（约 ${width}x${height}px）")
             return
         }
-        val predictions = classifier.classifyAveraged(crop)
+        val predictions = when (val classified = classifier.classifyAveraged(crop)) {
+            is com.whatsbird.classify.ClassificationResult.Success -> classified.predictions
+            else -> {
+                Log.w(TAG, "    框$ordinal 分类失败或无可用结果: $classified")
+                emptyList()
+            }
+        }
         val verdict = pipeline.identifyStill(frame, detection.box)
         Log.i(
             TAG,

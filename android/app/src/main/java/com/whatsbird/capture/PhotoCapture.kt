@@ -32,9 +32,11 @@ import androidx.camera.core.ImageProxy
 import androidx.camera.view.CameraController
 import androidx.exifinterface.media.ExifInterface
 import com.whatsbird.detect.BirdDetector
+import com.whatsbird.detect.DetectionResult
 import com.whatsbird.label.LabelKind
 import com.whatsbird.label.TrackLabel
 import com.whatsbird.pipeline.BirdPipeline
+import com.whatsbird.pipeline.StillIdentification
 import com.whatsbird.settings.AppSettings
 import com.whatsbird.settings.SaveMode
 import com.whatsbird.species.SpeciesDictionary
@@ -59,9 +61,9 @@ sealed interface CaptureOutcome {
         val birdCount: Int,
         val labeledFailed: Boolean,
         /**
-         * True when the label step could not run because the model was unavailable (not because the
-         * model ran and found nothing). Lets the UI say "saved original, model was unavailable"
-         * rather than the ambiguous "no bird found".
+         * True when the label step could not run *or* failed at runtime (not because the model ran
+         * and found nothing). Lets the UI say "saved original, model unavailable" rather than the
+         * ambiguous "no bird found".
          */
         val modelUnavailable: Boolean = false,
     ) : CaptureOutcome
@@ -239,14 +241,29 @@ class PhotoCapture(
         // it so the caller can tell the user "saved original, model unavailable" instead of the
         // ambiguous "no bird found".
         if (detector == null || pipeline == null) return emptyList<Annotation>() to true
-        val detections = detector.detectSync(frame)
+        val result = detector.detectSync(frame)
+        if (result is DetectionResult.Failure) {
+            Log.w(TAG, "still detection failed at runtime", result.error)
+            return emptyList<Annotation>() to true
+        }
+        val detections = result.detectionsOrNull.orEmpty()
         stages.mark("detect(n=${detections.size})")
+        var failed = false
         val annotations = detections.map { detection ->
-            val label = pipeline.identifyStill(frame, detection.box)
-            val species = label.classIndex?.let { dictionary?.speciesAt(it) }
-            Annotation(detection.box, label, species?.chineseName ?: species?.englishName)
+            when (val identified = pipeline.identifyStill(frame, detection.box)) {
+                // A runtime failure for one bird still lets the other birds keep their labels; the
+                // photo reports the failure instead of pretending every bird was simply unknown.
+                is StillIdentification.Failure -> {
+                    failed = true
+                    Annotation(detection.box, TrackLabel(LabelKind.UNKNOWN), null)
+                }
+                is StillIdentification.Label -> {
+                    val species = identified.label.classIndex?.let { dictionary?.speciesAt(it) }
+                    Annotation(detection.box, identified.label, species?.chineseName ?: species?.englishName)
+                }
+            }
         }.also { stages.mark("classify(n=${it.size})") }
-        return annotations to false
+        return annotations to failed
     }
 
     private fun render(frame: Bitmap, annotations: List<Annotation>): Bitmap {
