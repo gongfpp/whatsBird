@@ -20,18 +20,18 @@ import android.graphics.PointF
 import android.graphics.RectF
 import com.whatsbird.detect.RawDetection
 
-/** A bird the app is currently following. Boxes are normalised to the upright analysis frame. */
+/**
+ * A bird the app is currently following. Boxes are normalised to the upright analysis frame.
+ *
+ * Only the facts downstream actually consume are exposed: the box for drawing/cropping and
+ * `missedFrames` for the classify scheduler. Everything else the tracker maintains — the velocity
+ * used for prediction, hit counts — is internal bookkeeping, not part of the output contract.
+ */
 data class Track(
     val id: Int,
     val box: RectF,
-    val velocity: PointF,
-    val hits: Int,
     val missedFrames: Int,
-    val firstSeenMs: Long,
-    val lastSeenMs: Long,
-) {
-    val isConfirmedByDetector: Boolean get() = missedFrames == 0
-}
+)
 
 /**
  * Greedy IoU tracker with constant-velocity prediction.
@@ -57,17 +57,14 @@ class BirdTracker(
         val id: Int,
         var box: RectF,
         var velocity: PointF,
-        var hits: Int,
         var missed: Int,
-        val firstSeenMs: Long,
-        var lastSeenMs: Long,
     )
 
     private val states = ArrayList<State>(maxTracks)
     private var nextId = 1
 
     @Synchronized
-    fun update(detections: List<RawDetection>, timestampMs: Long): List<Track> {
+    fun update(detections: List<RawDetection>): List<Track> {
         // Work off stable State references, not list indices: spawning a track can evict another
         // one, which would silently re-point any index-based bookkeeping at the wrong bird.
         val candidates = states.map { Candidate(it, predict(it)) }
@@ -104,15 +101,13 @@ class BirdTracker(
                 state.velocity.y * (1 - velocitySmoothing) + dy * velocitySmoothing,
             )
             state.box = RectF(box)
-            state.hits += 1
             state.missed = 0
-            state.lastSeenMs = timestampMs
         }
 
         // Unmatched detections become new tracks.
         for (d in detections.indices) {
             if (matchedDetection[d]) continue
-            spawn(detections[d].box, timestampMs)
+            spawn(detections[d].box)
         }
 
         // Unmatched tracks coast on their predicted box for a bounded number of frames.
@@ -137,15 +132,7 @@ class BirdTracker(
         Track(
             id = it.id,
             box = RectF(it.box),
-            // PointF's copy constructor is API 35. On the Android 10 target it does not exist and
-            // the call raises NoSuchMethodError, which nothing catches — that is why the app only
-            // ever died once a bird was actually on screen: with an empty [states] this lambda
-            // never runs and no Track is ever built.
-            velocity = PointF(it.velocity.x, it.velocity.y),
-            hits = it.hits,
             missedFrames = it.missed,
-            firstSeenMs = it.firstSeenMs,
-            lastSeenMs = it.lastSeenMs,
         )
     }
 
@@ -154,11 +141,7 @@ class BirdTracker(
         Track(
             it.id,
             RectF(it.box),
-            PointF(it.velocity.x, it.velocity.y),
-            it.hits,
             it.missed,
-            it.firstSeenMs,
-            it.lastSeenMs,
         )
     }
 
@@ -168,7 +151,7 @@ class BirdTracker(
         nextId = 1
     }
 
-    private fun spawn(box: RectF, timestampMs: Long) {
+    private fun spawn(box: RectF) {
         if (states.size >= maxTracks) {
             // Only a bird that already missed a frame can be evicted. If every track is currently
             // visible, the new detection is dropped rather than displacing a bird we can still see.
@@ -179,10 +162,7 @@ class BirdTracker(
             id = nextId++,
             box = RectF(box),
             velocity = PointF(0f, 0f),
-            hits = 1,
             missed = 0,
-            firstSeenMs = timestampMs,
-            lastSeenMs = timestampMs,
         )
     }
 

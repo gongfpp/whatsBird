@@ -266,7 +266,7 @@ class BirdPipeline(
             firstResultMs = SystemClock.elapsedRealtime()
         }
         _firstResultSeen.value = true
-        val tracks = tracker.update(detections, timestampMs)
+        val tracks = tracker.update(detections)
 
         // Tracks that expired keep their vote history and crops otherwise — over a long scan that
         // is an unbounded leak, and a recycled track id would inherit a stale species name.
@@ -558,20 +558,20 @@ class BirdPipeline(
     private fun evaluateStill(predictions: List<Prediction>): TrackLabel {
         val top = predictions.firstOrNull() ?: return TrackLabel(LabelKind.UNKNOWN)
         if (top.classIndex == (dictionary?.backgroundClassIndex ?: -1)) {
-            return TrackLabel(LabelKind.UNKNOWN, score = top.score)
+            return TrackLabel(LabelKind.UNKNOWN)
         }
         val second = predictions.getOrNull(1)?.score ?: 0f
         val margin = top.score - second
         return if (top.score >= stillThreshold && margin >= STILL_MARGIN) {
-            TrackLabel(LabelKind.CONFIRMED, top.classIndex, top.score)
+            TrackLabel(LabelKind.CONFIRMED, top.classIndex)
         } else {
-            TrackLabel(LabelKind.UNKNOWN, score = top.score)
+            TrackLabel(LabelKind.UNKNOWN)
         }
     }
 
     /** Mirrors the display threshold so the saved photo's labels match what the preview showed. */
     @Volatile
-    var stillThreshold: Float = AppSettings.DEFAULT_CONFIDENCE_THRESHOLD
+    private var stillThreshold: Float = AppSettings.DEFAULT_CONFIDENCE_THRESHOLD
 
     fun onSettingsChanged(confidenceThreshold: Float) {
         stabilizer.displayThreshold = confidenceThreshold
