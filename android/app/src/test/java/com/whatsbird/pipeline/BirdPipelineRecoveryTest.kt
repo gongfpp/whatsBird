@@ -74,7 +74,7 @@ class BirdPipelineRecoveryTest {
         val pipeline = newPipeline(tracker)
         try {
             val birds = listOf(RawDetection(RectF(0.2f, 0.2f, 0.5f, 0.5f), 0.9f))
-            val id = tracker.update(birds, 1000L).single().id
+            val id = tracker.update(birds).single().id
 
             // Seed the pipeline's internal per-track memory with an outstanding `enqueued` hold and a
             // queued job, exactly as handleDetections would have done the frame before the miss.
@@ -94,13 +94,13 @@ class BirdPipelineRecoveryTest {
             (field(pipeline, "queue").get(pipeline) as Deque<Any>).addLast(job)
 
             // The bird is briefly missed but still alive in the tracker.
-            tracker.update(emptyList(), 1100L)
+            tracker.update(emptyList())
             call(pipeline, "drainQueue")
             // Wait for the single-thread classify executor to finish the pass.
             (field(pipeline, "classifyExecutor").get(pipeline) as ExecutorService)
                 .submit { }.get(3, TimeUnit.SECONDS)
 
-            val reacquired = tracker.update(birds, 1200L).single().id
+            val reacquired = tracker.update(birds).single().id
             assertEquals("the same track must return after a brief miss", id, reacquired)
             assertFalse(
                 "discarded crop must release `enqueued`; otherwise handleDetections skips this bird forever",

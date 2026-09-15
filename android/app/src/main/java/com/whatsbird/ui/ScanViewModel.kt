@@ -29,7 +29,6 @@ import com.whatsbird.camera.FrameAnalyzer
 import com.whatsbird.capture.CaptureOutcome
 import com.whatsbird.capture.MediaStoreSaver
 import com.whatsbird.capture.PhotoCapture
-import com.whatsbird.capture.SaveResult
 import com.whatsbird.classify.SpeciesClassifier
 import com.whatsbird.detect.BirdDetector
 import com.whatsbird.pipeline.BirdPipeline
@@ -56,7 +55,6 @@ enum class CaptureMessage { ORIGINAL_SAVED, LABELED_SAVED, BOTH_SAVED, PARTIAL, 
 data class CaptureUiState(
     val busy: Boolean = false,
     val message: CaptureMessage? = null,
-    val detail: String? = null,
     val thumbnailUri: Uri? = null,
     val identified: List<String> = emptyList(),
 )
@@ -314,7 +312,7 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
     fun capture() {
         val active = capture
         if (active == null) {
-            _captureState.value = CaptureUiState(message = CaptureMessage.FAILED, detail = "model unavailable")
+            _captureState.value = CaptureUiState(message = CaptureMessage.FAILED)
             return
         }
         if (_captureState.value.busy) return
@@ -348,7 +346,6 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
                         CaptureOutcome.FailureReason.OUT_OF_SPACE -> CaptureMessage.NO_SPACE
                         else -> CaptureMessage.FAILED
                     },
-                    detail = outcome.detail,
                 )
                 null -> CaptureUiState(busy = false, message = CaptureMessage.FAILED)
             }
@@ -356,7 +353,7 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun dismissCaptureMessage() {
-        _captureState.value = _captureState.value.copy(message = null, detail = null)
+        _captureState.value = _captureState.value.copy(message = null)
     }
 
     fun setSaveMode(mode: SaveMode) = viewModelScope.launch { app.settings.setSaveMode(mode) }

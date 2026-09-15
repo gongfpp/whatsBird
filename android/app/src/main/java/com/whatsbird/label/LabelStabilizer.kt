@@ -33,7 +33,6 @@ enum class LabelKind {
 data class TrackLabel(
     val kind: LabelKind,
     val classIndex: Int? = null,
-    val score: Float = 0f,
 )
 
 /**
@@ -146,22 +145,14 @@ class LabelStabilizer(
         // similar species from trading the label back and forth every frame.
         val locked = state.lockedClass
         if (locked != null && locked != topClass && timestampMs - state.lockedAtMs < lockTtlMs) {
-            if (agreement < switchAgreement) {
-                val lockedEvidence = evidence[locked]
-                if (lockedEvidence != null) {
-                    val lockedVotes = state.votes.count { it.classIndex == locked }
-                    return TrackLabel(
-                        LabelKind.CONFIRMED,
-                        locked,
-                        if (lockedVotes > 0) lockedEvidence / lockedVotes else 0f,
-                    )
-                }
+            if (agreement < switchAgreement && locked in evidence) {
+                return TrackLabel(LabelKind.CONFIRMED, locked)
             }
         }
 
         if (topClass == backgroundClassIndex) {
             if (mutateLock) state.lockedClass = null
-            return TrackLabel(LabelKind.UNKNOWN, score = meanScore)
+            return TrackLabel(LabelKind.UNKNOWN)
         }
 
         val confirms = agreement >= agreementThreshold && meanScore >= displayThreshold
@@ -170,9 +161,9 @@ class LabelStabilizer(
                 state.lockedClass = topClass
                 state.lockedAtMs = timestampMs
             }
-            return TrackLabel(LabelKind.CONFIRMED, topClass, meanScore)
+            return TrackLabel(LabelKind.CONFIRMED, topClass)
         }
 
-        return TrackLabel(LabelKind.UNKNOWN, score = meanScore)
+        return TrackLabel(LabelKind.UNKNOWN)
     }
 }

@@ -66,7 +66,7 @@ sealed interface CaptureOutcome {
         val modelUnavailable: Boolean = false,
     ) : CaptureOutcome
 
-    data class Failure(val reason: FailureReason, val detail: String? = null) : CaptureOutcome
+    data class Failure(val reason: FailureReason) : CaptureOutcome
 
     enum class FailureReason { CAMERA, OUT_OF_SPACE, SAVE_FAILED, DECODE_FAILED }
 }
@@ -148,6 +148,7 @@ class PhotoCapture(
                 modelUnavailable = false,
             )
         }
+
         val upright = BitmapOps.rotate(decoded, exifRotation(jpegBytes))
         val frameSize = "${upright.width}x${upright.height}"
         stages.mark("decode+rotate")
@@ -219,8 +220,7 @@ class PhotoCapture(
             original is SaveResult.OutOfSpace || reason == CaptureOutcome.FailureReason.OUT_OF_SPACE ->
                 CaptureOutcome.Failure(CaptureOutcome.FailureReason.OUT_OF_SPACE)
 
-            original is SaveResult.Failed ->
-                CaptureOutcome.Failure(CaptureOutcome.FailureReason.SAVE_FAILED, original.message)
+            original is SaveResult.Failed -> CaptureOutcome.Failure(CaptureOutcome.FailureReason.SAVE_FAILED)
 
             reason != null -> CaptureOutcome.Failure(reason)
 

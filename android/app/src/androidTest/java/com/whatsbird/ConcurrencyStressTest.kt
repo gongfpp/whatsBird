@@ -88,7 +88,7 @@ class ConcurrencyStressTest {
     @Test
     fun snapshotBuildsTracksOnThisDevice() {
         val tracker = BirdTracker()
-        val tracks = tracker.update(detections(0.10f), 1_000L)
+        val tracks = tracker.update(detections(0.10f))
         val snapshot = tracker.currentSnapshot()
 
         assertTrue("two detections should produce two live tracks", tracks.size == 2)
@@ -106,8 +106,8 @@ class ConcurrencyStressTest {
 
         val failures = hammer(
             listOf(
-                { tracker.update(detections(0.10f), clock.incrementAndGet()) },
-                { tracker.update(detections(0.45f), clock.incrementAndGet()) },
+                { tracker.update(detections(0.10f)) },
+                { tracker.update(detections(0.45f)) },
                 { tracker.currentSnapshot() },
                 { tracker.find(1) },
                 { tracker.reset() },

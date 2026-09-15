@@ -335,7 +335,7 @@ def reject_cross_version_leakage(provenance: dict, photo_ids: dict, observation_
     )
 
 
-def imagenet_checkpoint_hash(backbone: str, input_size: int) -> str | None:
+def imagenet_checkpoint_hash(backbone: str) -> str | None:
     """Locates the Keras ImageNet checkpoint for the backbone and hashes it, when present.
 
     The weights are downloaded once into `~/.keras/models/` (or `KERAS_HOME`). Hashing the actual
@@ -509,7 +509,7 @@ def main() -> int:
         base_model = f"keras:{args.backbone} imagenet-pretrained"
         # ImageNet checkpoints are fetched and cached by Keras at build time; the file lives in
         # the TF cache directory and is hashed here if it can be located.
-        base_model_hash = imagenet_checkpoint_hash(args.backbone, args.input_size)
+        base_model_hash = imagenet_checkpoint_hash(args.backbone)
 
     weights = class_weights(classes, train_dir)
     print(f"classes={num_classes} backbone={args.backbone} input={args.input_size}")
