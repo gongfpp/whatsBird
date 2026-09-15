@@ -113,9 +113,6 @@ fun CameraScreen(viewModel: ScanViewModel = viewModel()) {
     // Read the locale from LocalConfiguration (Compose-observable) rather than Locale.getDefault(),
     // which the NonObservableLocale lint flags because it does not react to runtime locale changes.
     val useChinese = (configuration.locales.get(0)?.language ?: "en").startsWith("zh")
-    // Give the overlay the same aspect the view will have, derived from the live configuration.
-    val viewAspect = configuration.screenWidthDp.toFloat() / configuration.screenHeightDp.toFloat()
-
     // Tap-to-focus is handled inside PreviewView (CameraController gestures). The view listener
     // here only *observes* the tap and returns false, so the real focus gesture is untouched —
     // this exists purely to mirror where focus was set, and the ring fades by itself.
@@ -256,9 +253,6 @@ fun CameraScreen(viewModel: ScanViewModel = viewModel()) {
             }
         }
     }
-
-    // Keep the aspect in sync if the window changes shape (foldables, split screen).
-    LaunchedEffect(viewAspect) { /* geometry arrives with the first analysed frame */ }
 
     if (showSettings) {
         SettingsSheet(

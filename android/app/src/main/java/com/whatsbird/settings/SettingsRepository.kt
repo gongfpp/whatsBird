@@ -22,7 +22,6 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
-import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
@@ -37,7 +36,6 @@ class SettingsRepository(private val context: Context) {
         val SHOW_BOXES = booleanPreferencesKey("show_boxes")
         val PREFER_GPU = booleanPreferencesKey("prefer_gpu")
         val CONFIDENCE = floatPreferencesKey("confidence_threshold")
-        val DET_PER_SEC = intPreferencesKey("detections_per_second")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { prefs ->
@@ -47,7 +45,6 @@ class SettingsRepository(private val context: Context) {
             showBoxes = prefs[Keys.SHOW_BOXES] ?: defaults.showBoxes,
             preferGpu = prefs[Keys.PREFER_GPU] ?: defaults.preferGpu,
             confidenceThreshold = prefs[Keys.CONFIDENCE] ?: defaults.confidenceThreshold,
-            targetDetectionsPerSecond = prefs[Keys.DET_PER_SEC] ?: defaults.targetDetectionsPerSecond,
         )
     }
 
@@ -65,9 +62,5 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setConfidenceThreshold(value: Float) {
         context.dataStore.edit { it[Keys.CONFIDENCE] = value.coerceIn(0.05f, 0.95f) }
-    }
-
-    suspend fun setTargetDetectionsPerSecond(value: Int) {
-        context.dataStore.edit { it[Keys.DET_PER_SEC] = value.coerceIn(2, 15) }
     }
 }

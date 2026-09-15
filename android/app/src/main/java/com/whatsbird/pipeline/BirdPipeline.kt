@@ -24,6 +24,7 @@ import com.whatsbird.classify.ClassificationResult
 import com.whatsbird.classify.Prediction
 import com.whatsbird.classify.SpeciesClassifier
 import com.whatsbird.detect.BirdDetector
+import com.whatsbird.detect.DetectionResult
 import com.whatsbird.label.LabelKind
 import com.whatsbird.label.LabelStabilizer
 import com.whatsbird.label.TrackLabel
@@ -110,21 +111,18 @@ class BirdPipeline(
     private val _overlay = MutableStateFlow<List<OverlayItem>>(emptyList())
     val overlay: StateFlow<List<OverlayItem>> = _overlay.asStateFlow()
 
-    private val _status = MutableStateFlow(
-        when {
+    init {
+        // The UI shows a single chip for "something is missing"; this is the line that says which
+        // piece, so a field report can be diagnosed without a rebuild. The model status the UI sees
+        // is owned by the ViewModel; the pipeline only reports it here, once, for the log.
+        val status = when {
             detector == null -> ModelStatus.FAILED
             classifier == null -> ModelStatus.DETECTOR_ONLY
             else -> ModelStatus.READY
-        },
-    )
-    val status: StateFlow<ModelStatus> = _status.asStateFlow()
-
-    init {
-        // The UI shows a single chip for "something is missing"; this is the line that says which
-        // piece, so a field report can be diagnosed without a rebuild.
+        }
         Log.i(
             TAG,
-            "pipeline ready status=${_status.value} detector=${detector != null} " +
+            "pipeline ready status=$status detector=${detector != null} " +
                 "classifier=${classifier != null} dictionary=${dictionary != null}",
         )
     }
@@ -509,6 +507,15 @@ class BirdPipeline(
             statsWindowStart = nowMs
         }
     }
+
+    /**
+     * Synchronous still-photo detection through this pipeline's detector. The pipeline is the single
+     * owner of the model set, so "are the models up" is answered here rather than re-checked (and
+     * re-held) by every caller.
+     */
+    fun detectStill(frame: Bitmap): DetectionResult =
+        detector?.detectSync(frame)
+            ?: DetectionResult.Failure(IllegalStateException("pipeline has no detector"))
 
     /**
      * Single-shot identification for a still photo. Deliberately does not reuse the preview's

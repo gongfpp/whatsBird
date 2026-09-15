@@ -35,7 +35,6 @@ import com.whatsbird.detect.BirdDetector
 import com.whatsbird.pipeline.BirdPipeline
 import com.whatsbird.pipeline.ModelStatus
 import com.whatsbird.pipeline.OverlayItem
-import com.whatsbird.pipeline.PipelineStats
 import com.whatsbird.settings.AppSettings
 import com.whatsbird.settings.SaveMode
 import com.whatsbird.util.BootGuard
@@ -90,9 +89,6 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
     private val _modelStatus = MutableStateFlow(ModelStatus.LOADING)
     val modelStatus: StateFlow<ModelStatus> = _modelStatus.asStateFlow()
 
-    private val _stats = MutableStateFlow(PipelineStats())
-    val stats: StateFlow<PipelineStats> = _stats.asStateFlow()
-
     private val _captureState = MutableStateFlow(CaptureUiState())
     val captureState: StateFlow<CaptureUiState> = _captureState.asStateFlow()
 
@@ -121,10 +117,6 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
     @Volatile
     private var pipeline: BirdPipeline? = null
 
-    @Volatile
-    private var detector: BirdDetector? = null
-
-    private var classifier: SpeciesClassifier? = null
     private var capture: PhotoCapture? = null
     private var controller: LifecycleCameraController? = null
 
@@ -192,8 +184,6 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
         // rebuild, and model loading is slow enough that the older one can finish last. Whoever lands
         // second wins; the stale result is discarded rather than overwriting the newer state.
         val token = ++buildToken
-        detector = null
-        classifier = null
         capture = null
         _overlay.value = emptyList()
 
@@ -251,8 +241,6 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
         dictionary: com.whatsbird.species.SpeciesDictionary?,
         confidenceThreshold: Float,
     ) {
-        detector = newDetector
-        classifier = newClassifier
         newDetector?.setErrorListener { error ->
             val now = System.currentTimeMillis()
             Log.e(TAG, "detector runtime error", error)
@@ -284,13 +272,14 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
         )
         newPipeline.onSettingsChanged(confidenceThreshold)
         pipeline = newPipeline
-        _modelStatus.value = newPipeline.status.value
+        // The detector is non-null here, so the pipeline's status is decided by the classifier;
+        // computed inline rather than asking the pipeline, which does not own the UI's status.
+        _modelStatus.value = if (newClassifier == null) ModelStatus.DETECTOR_ONLY else ModelStatus.READY
         refreshCaptureHandler()
 
-        // One parent job for all three forwarders so a rebuild cancels them in a single step.
+        // One parent job for all forwarders so a rebuild cancels them in a single step.
         pipelineCollectors = viewModelScope.launch {
             launch { newPipeline.overlay.collect { _overlay.value = it } }
-            launch { newPipeline.stats.collect { _stats.value = it } }
             launch { newPipeline.firstResultSeen.collect { seen -> if (seen) bootGuard.clear() } }
         }
     }
@@ -299,10 +288,9 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
         val controller = controller ?: return
         // The camera and the original-photo save must work even when the model failed to load: a
         // detection/model error must never take away the basic shutter. PhotoCapture accepts a null
-        // detector/pipeline and simply produces an unlabeled photo in that case.
+        // pipeline and simply produces an unlabeled photo in that case.
         capture = PhotoCapture(
             controller = controller,
-            detector = detector,
             pipeline = pipeline,
             dictionary = app.speciesDictionary,
             saver = saver,
@@ -388,11 +376,9 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
     override fun onCleared() {
         super.onCleared()
         capture = null
+        // BirdPipeline.close() owns the model lifecycle: it closes the detector and classifier too.
         pipeline?.close()
         pipeline = null
-        detector = null
-        classifier?.close()
-        classifier = null
         analysisExecutor.shutdownNow()
         captureIoExecutor.shutdownNow()
     }

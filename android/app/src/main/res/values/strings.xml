@@ -8,16 +8,12 @@
     <string name="perm_settings">去系统设置开启</string>
     <string name="perm_denied_forever">权限已被永久拒绝，请到「设置 → 应用 → 识鸟 → 权限」中开启相机。</string>
 
-    <string name="cam_starting">正在启动相机…</string>
-    <string name="cam_error">相机启动失败</string>
-    <string name="cam_retry">重试</string>
 
     <string name="status_scanning">扫描中</string>
     <string name="status_waiting">等待鸟类进入画面</string>
     <string name="status_model_loading">模型加载中…</string>
     <string name="status_detector_only">未装载鸟类识别模型，仅可检测</string>
     <string name="status_model_failed">模型加载失败，仅可拍照</string>
-    <string name="status_low_light">光线较暗，识别可能不准</string>
 
     <string name="label_identifying">识别中</string>
     <string name="label_unknown_bird">鸟类，暂未确定</string>
@@ -26,9 +22,7 @@
     <string name="shutter">拍照</string>
     <string name="gallery">相册</string>
     <string name="settings">设置</string>
-    <string name="zoom_reset">1x</string>
 
-    <string name="save_saving">正在保存…</string>
     <string name="save_original_ok">原图已保存</string>
     <string name="save_labeled_ok">带标签照片已保存</string>
     <string name="save_both_ok">原图与带标签照片已保存</string>
