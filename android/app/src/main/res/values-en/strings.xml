@@ -8,16 +8,12 @@
     <string name="perm_settings">Open system settings</string>
     <string name="perm_denied_forever">Permission was permanently denied. Enable the camera under Settings → Apps → whatsBird → Permissions.</string>
 
-    <string name="cam_starting">Starting camera…</string>
-    <string name="cam_error">Camera failed to start</string>
-    <string name="cam_retry">Retry</string>
 
     <string name="status_scanning">Scanning</string>
     <string name="status_waiting">Waiting for a bird</string>
     <string name="status_model_loading">Loading models…</string>
     <string name="status_detector_only">No identifier model — detection only</string>
     <string name="status_model_failed">Model failed to load — capture only</string>
-    <string name="status_low_light">Low light, accuracy may drop</string>
 
     <string name="label_identifying">Identifying</string>
     <string name="label_unknown_bird">Bird, species unknown</string>
@@ -26,9 +22,7 @@
     <string name="shutter">Capture</string>
     <string name="gallery">Gallery</string>
     <string name="settings">Settings</string>
-    <string name="zoom_reset">1x</string>
 
-    <string name="save_saving">Saving…</string>
     <string name="save_original_ok">Original saved</string>
     <string name="save_labeled_ok">Labeled photo saved</string>
     <string name="save_both_ok">Original and labeled photo saved</string>

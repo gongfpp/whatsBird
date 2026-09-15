@@ -47,7 +47,6 @@ object SpeciesDictionaryLoader {
             )
         }
         return SpeciesDictionary(
-            version = root.optString("version", "unknown"),
             modelVersion = root.optString("modelVersion", "unknown"),
             inputSize = root.optInt("inputSize", 224),
             inputScale = root.optDouble("inputScale", 1.0 / 127.5).toFloat(),
@@ -59,7 +58,6 @@ object SpeciesDictionaryLoader {
     }
 
     private fun empty() = SpeciesDictionary(
-        version = "empty",
         modelVersion = "none",
         inputSize = 224,
         inputScale = 1f / 127.5f,

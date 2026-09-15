@@ -46,12 +46,6 @@ object CrashLog {
         }
     }
 
-    /** Newest first. */
-    fun reports(context: Context): List<File> =
-        File(context.filesDir, DIR_NAME).listFiles()
-            ?.sortedByDescending { it.name }
-            ?: emptyList()
-
     private fun write(dir: File, thread: Thread, throwable: Throwable) {
         if (!dir.isDirectory && !dir.mkdirs()) return
         val stamp = SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.US).format(Date())

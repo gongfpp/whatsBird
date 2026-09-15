@@ -18,7 +18,6 @@ package com.whatsbird.util
 
 import android.graphics.Bitmap
 import android.graphics.Matrix
-import android.graphics.Rect
 import android.graphics.RectF
 
 object BitmapOps {
@@ -50,14 +49,6 @@ object BitmapOps {
         if (width < minPixels || height < minPixels) return null
         return runCatching { Bitmap.createBitmap(source, left, top, width, height) }.getOrNull()
     }
-
-    /** Converts a normalised rect into pixel bounds for the given bitmap size. */
-    fun toPixelRect(norm: RectF, width: Int, height: Int): Rect = Rect(
-        (norm.left * width).toInt(),
-        (norm.top * height).toInt(),
-        (norm.right * width).toInt(),
-        (norm.bottom * height).toInt(),
-    )
 
     /** Fraction of the frame the box covers — used to explain "move closer" hints. */
     fun areaFraction(norm: RectF): Float = (norm.width() * norm.height()).coerceIn(0f, 1f)

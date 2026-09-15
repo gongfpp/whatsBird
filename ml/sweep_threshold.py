@@ -48,7 +48,7 @@ os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")
 
 import numpy as np  # noqa: E402
 
-from common_birds import DISTRACTOR_BIRDS, NON_BIRD_TAXA  # noqa: E402
+from common_birds import DISTRACTOR_BIRDS  # noqa: E402
 from export_assets import TfliteRunner, class_order, load_test_records, make_image_pipeline  # noqa: E402
 
 THRESHOLDS = [round(0.20 + 0.05 * step, 2) for step in range(13)]

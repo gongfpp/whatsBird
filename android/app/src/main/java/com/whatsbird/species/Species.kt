@@ -26,15 +26,10 @@ data class Species(
     val scientificName: String,
     val englishName: String,
     val chineseName: String,
-) {
-    /** Chinese is the primary label for this app; English is the fallback for non-zh locales. */
-    fun displayName(useChinese: Boolean): String =
-        if (useChinese) chineseName else englishName
-}
+)
 
 /** Everything the runtime needs to keep the model's output space and the app's UI in sync. */
 data class SpeciesDictionary(
-    val version: String,
     val modelVersion: String,
     val inputSize: Int,
     val inputScale: Float,

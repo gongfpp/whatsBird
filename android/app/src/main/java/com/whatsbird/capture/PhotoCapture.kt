@@ -31,7 +31,6 @@ import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
 import androidx.camera.view.CameraController
 import androidx.exifinterface.media.ExifInterface
-import com.whatsbird.detect.BirdDetector
 import com.whatsbird.detect.DetectionResult
 import com.whatsbird.label.LabelKind
 import com.whatsbird.label.TrackLabel
@@ -58,7 +57,6 @@ sealed interface CaptureOutcome {
         val labeled: SaveResult.Saved?,
         /** Species names resolved from the *photo*, not from whatever the preview had shown. */
         val identifiedNames: List<String>,
-        val birdCount: Int,
         val labeledFailed: Boolean,
         /**
          * True when the label step could not run *or* failed at runtime (not because the model ran
@@ -93,7 +91,6 @@ sealed interface CaptureOutcome {
  */
 class PhotoCapture(
     private val controller: CameraController,
-    private val detector: BirdDetector?,
     private val pipeline: BirdPipeline?,
     private val dictionary: SpeciesDictionary?,
     private val saver: MediaStoreSaver,
@@ -127,7 +124,8 @@ class PhotoCapture(
         // LABELED-only mode: the user pressed the shutter for a photo, and the model being down must
         // not cost them that. This is also what keeps "model unavailable" distinguishable from "the
         // model ran and found no bird" — the latter still produces a labelled copy, with no boxes.
-        val modelsReady = detector != null && pipeline != null
+        // The pipeline is the single owner of the model set, so its presence is the readiness fact.
+        val modelsReady = pipeline != null
         val labeledRequested = settings.saveMode != SaveMode.ORIGINAL && modelsReady
         val saveOriginal = settings.saveMode != SaveMode.LABELED || !modelsReady
 
@@ -210,7 +208,6 @@ class PhotoCapture(
                 original = savedOriginal,
                 labeled = labeled,
                 identifiedNames = names,
-                birdCount = annotations.size,
                 labeledFailed = labeledFailed || (labeledRequested && labeled == null),
                 // With no model we never wrote a labelled copy, so this stays true and the UI can say
                 // "saved original, model unavailable" rather than the ambiguous "no bird found".
@@ -235,13 +232,12 @@ class PhotoCapture(
 
     /** Re-detects and re-classifies the still; a single frame gets no multi-frame vote. */
     private fun identify(frame: Bitmap, stages: StageLog): Pair<List<Annotation>, Boolean> {
-        val detector = detector
         val pipeline = pipeline
         // The model being absent is a different outcome from "the model ran and found nothing": signal
         // it so the caller can tell the user "saved original, model unavailable" instead of the
         // ambiguous "no bird found".
-        if (detector == null || pipeline == null) return emptyList<Annotation>() to true
-        val result = detector.detectSync(frame)
+        if (pipeline == null) return emptyList<Annotation>() to true
+        val result = pipeline.detectStill(frame)
         if (result is DetectionResult.Failure) {
             Log.w(TAG, "still detection failed at runtime", result.error)
             return emptyList<Annotation>() to true
